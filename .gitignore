@@ -49,3 +49,4 @@ app_logs.txt
 /android/key.properties
 /android/app/google-services.json
 test_google_signin_app/
+lib/firebase_options.dart
