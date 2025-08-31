@@ -1,6 +1,6 @@
 {
-    "name": "reathm_webapp",
-    "short_name": "reathm_webapp",
+    "name": "reathm",
+    "short_name": "reathm",
     "start_url": ".",
     "display": "standalone",
     "background_color": "#0175C2",

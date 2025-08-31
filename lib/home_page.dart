@@ -158,236 +158,233 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: SingleChildScrollView(
-        child: Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              // Affirmation Card
-              Card(
-                elevation: 4,
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                child: Padding(
-                  padding: const EdgeInsets.all(16.0),
-                  child: Column(
-                    children: [
-                      Text(
-                        _affirmation,
-                        style: Theme.of(context).textTheme.headlineSmall,
-                        textAlign: TextAlign.center,
-                      ),
-                      const SizedBox(height: 20),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                        children: [
-                          ElevatedButton(
-                            onPressed: _generateNewAffirmationFromAI,
-                            child: const Text('New Affirmation'),
-                          ),
-                          IconButton(
-                            icon: const Icon(Icons.thumb_up_outlined),
-                            onPressed: () {
-                              _saveAffirmationFeedback(true);
-                            },
-                          ),
-                          IconButton(
-                            icon: const Icon(Icons.thumb_down_outlined),
-                            onPressed: () {
-                              _saveAffirmationFeedback(false);
-                              _cloudFunctionService.generateNewAffirmation(_affirmation).then((newAffirmation) {
-                                setState(() {
-                                  _affirmation = newAffirmation;
-                                });
+    return SingleChildScrollView(
+      child: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            // Affirmation Card
+            Card(
+              elevation: 4,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              child: Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: Column(
+                  children: [
+                    Text(
+                      _affirmation,
+                      style: Theme.of(context).textTheme.headlineSmall,
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: 20),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                      children: [
+                        ElevatedButton(
+                          onPressed: _generateNewAffirmationFromAI,
+                          child: const Text('New Affirmation'),
+                        ),
+                        IconButton(
+                          icon: const Icon(Icons.thumb_up_outlined),
+                          onPressed: () {
+                            _saveAffirmationFeedback(true);
+                          },
+                        ),
+                        IconButton(
+                          icon: const Icon(Icons.thumb_down_outlined),
+                          onPressed: () {
+                            _saveAffirmationFeedback(false);
+                            _cloudFunctionService.generateNewAffirmation(_affirmation).then((newAffirmation) {
+                              setState(() {
+                                _affirmation = newAffirmation;
                               });
-                            },
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
+                            });
+                          },
+                        ),
+                      ],
+                    ),
+                  ],
                 ),
               ),
-              const SizedBox(height: 20),
+            ),
+            const SizedBox(height: 20),
 
-              // Grid for other cards
-              GridView.count(
-                crossAxisCount: 2,
-                shrinkWrap: true,
-                physics: const NeverScrollableScrollPhysics(),
-                crossAxisSpacing: 16,
-                mainAxisSpacing: 16,
-                children: [
-                  // Reflection Timer Card
-                  Card(
-                    elevation: 4,
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                    child: Padding(
-                      padding: const EdgeInsets.all(16.0),
-                      child: Column(
-                        children: [
-                          Text(
-                            'Reflection Timer',
-                            style: Theme.of(context).textTheme.titleLarge,
-                          ),
-                          const SizedBox(height: 10),
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              DropdownButton<double>(
-                                value: _timerDuration,
-                                items: [0.5, 1.0, 2.0, 5.0, 10.0, 20.0].map((double value) {
-                                  return DropdownMenuItem<double>(
-                                    value: value,
-                                    child: Text('$value min'),
-                                  );
-                                }).toList(),
-                                onChanged: (newValue) {
-                                  setState(() {
-                                    _timerDuration = newValue!;
-                                    _remainingSeconds = (_timerDuration * 60).toInt();
-                                  });
-                                },
-                              ),
-                              const SizedBox(width: 20),
-                              ElevatedButton(
-                                onPressed: _isTimerRunning ? _stopTimer : _startTimer,
-                                child: Text(_isTimerRunning ? 'Stop' : 'Start'),
-                              ),
-                            ],
-                          ),
-                          const SizedBox(height: 10),
-                          Text(
-                            _formatDuration(_remainingSeconds),
-                            style: Theme.of(context).textTheme.headlineMedium,
-                            textAlign: TextAlign.center,
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-
-                  // Daily Reminder Card
-                  Card(
-                    elevation: 4,
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                    child: Padding(
-                      padding: const EdgeInsets.all(16.0),
-                      child: Column(
-                        children: [
-                          Text(
-                            'Daily Reminder',
-                            style: Theme.of(context).textTheme.titleLarge,
-                          ),
-                          const SizedBox(height: 10),
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              DropdownButton<int>(
-                                value: _selectedHour,
-                                items: List.generate(24, (index) => index).map((hour) {
-                                  return DropdownMenuItem<int>(
-                                    value: hour,
-                                    child: Text(hour.toString().padLeft(2, '0')),
-                                  );
-                                }).toList(),
-                                onChanged: (newValue) {
-                                  setState(() {
-                                    _selectedHour = newValue!;
-                                  });
-                                },
-                              ),
-                              const Text(':'),
-                              DropdownButton<int>(
-                                value: _selectedMinute,
-                                items: List.generate(60, (index) => index).map((minute) {
-                                  return DropdownMenuItem<int>(
-                                    value: minute,
-                                    child: Text(minute.toString().padLeft(2, '0')),
-                                  );
-                                }).toList(),
-                                onChanged: (newValue) {
-                                  setState(() {
-                                    _selectedMinute = newValue!;
-                                  });
-                                },
-                              ),
-                            ],
-                          ),
-                          const SizedBox(height: 10),
-                          ElevatedButton(
-                            onPressed: _scheduleDailyReminder,
-                            child: const Text('Set Reminder'),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 20),
-
-              // Daily Activities Card
-              Card(
-                elevation: 4,
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                child: Padding(
-                  padding: const EdgeInsets.all(16.0),
-                  child: Column(
-                    children: [
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Text(
-                            'Daily Activities',
-                            style: Theme.of(context).textTheme.titleLarge,
-                          ),
-                          ElevatedButton(
-                            onPressed: () async {
-                              final updatedActivities = await Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (context) => ManageActivitiesPage(dailyActivities: _dailyActivities),
-                                ),
-                              );
-                              if (updatedActivities != null) {
+            // Grid for other cards
+            GridView.count(
+              crossAxisCount: 2,
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              crossAxisSpacing: 16,
+              mainAxisSpacing: 16,
+              children: [
+                // Reflection Timer Card
+                Card(
+                  elevation: 4,
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  child: Padding(
+                    padding: const EdgeInsets.all(16.0),
+                    child: Column(
+                      children: [
+                        Text(
+                          'Reflection Timer',
+                          style: Theme.of(context).textTheme.titleLarge,
+                        ),
+                        const SizedBox(height: 10),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            DropdownButton<double>(
+                              value: _timerDuration,
+                              items: [0.5, 1.0, 2.0, 5.0, 10.0, 20.0].map((double value) {
+                                return DropdownMenuItem<double>(
+                                  value: value,
+                                  child: Text('$value min'),
+                                );
+                              }).toList(),
+                              onChanged: (newValue) {
                                 setState(() {
-                                  _dailyActivities = updatedActivities;
+                                  _timerDuration = newValue!;
+                                  _remainingSeconds = (_timerDuration * 60).toInt();
                                 });
-                                await _firestoreService.saveDailyActivities(widget.user.uid, _dailyActivities);
-                              }
-                            },
-                            child: const Text('Manage'),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 10),
-                      ..._dailyActivities.keys.map((activity) {
-                        return CheckboxListTile(
-                          title: Text(activity),
-                          value: _dailyActivities[activity],
-                          onChanged: (newValue) async {
-                            setState(() {
-                              _dailyActivities[activity] = newValue!;
-                            });
-                            await _firestoreService.saveDailyActivities(widget.user.uid, _dailyActivities);
-                            if (newValue == true) {
-                              await _firestoreService.addAccomplishment(widget.user.uid, activity);
-                              final encouragement = await _cloudFunctionService.generateEncouragement(activity);
-                              _showEncouragement(encouragement);
+                              },
+                            ),
+                            const SizedBox(width: 20),
+                            ElevatedButton(
+                              onPressed: _isTimerRunning ? _stopTimer : _startTimer,
+                              child: Text(_isTimerRunning ? 'Stop' : 'Start'),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 10),
+                        Text(
+                          _formatDuration(_remainingSeconds),
+                          style: Theme.of(context).textTheme.headlineMedium,
+                          textAlign: TextAlign.center,
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+
+                // Daily Reminder Card
+                Card(
+                  elevation: 4,
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  child: Padding(
+                    padding: const EdgeInsets.all(16.0),
+                    child: Column(
+                      children: [
+                        Text(
+                          'Daily Reminder',
+                          style: Theme.of(context).textTheme.titleLarge,
+                        ),
+                        const SizedBox(height: 10),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            DropdownButton<int>(
+                              value: _selectedHour,
+                              items: List.generate(24, (index) => index).map((hour) {
+                                return DropdownMenuItem<int>(
+                                  value: hour,
+                                  child: Text(hour.toString().padLeft(2, '0')),
+                                );
+                              }).toList(),
+                              onChanged: (newValue) {
+                                setState(() {
+                                  _selectedHour = newValue!;
+                                });
+                              },
+                            ),
+                            const Text(':'),
+                            DropdownButton<int>(
+                              value: _selectedMinute,
+                              items: List.generate(60, (index) => index).map((minute) {
+                                return DropdownMenuItem<int>(
+                                  value: minute,
+                                  child: Text(minute.toString().padLeft(2, '0')),
+                                );
+                              }).toList(),
+                              onChanged: (newValue) {
+                                setState(() {
+                                  _selectedMinute = newValue!;
+                                });
+                              },
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 10),
+                        ElevatedButton(
+                          onPressed: _scheduleDailyReminder,
+                          child: const Text('Set Reminder'),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 20),
+
+            // Daily Activities Card
+            Card(
+              elevation: 4,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              child: Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: Column(
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          'Daily Activities',
+                          style: Theme.of(context).textTheme.titleLarge,
+                        ),
+                        ElevatedButton(
+                          onPressed: () async {
+                            final updatedActivities = await Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => ManageActivitiesPage(dailyActivities: _dailyActivities),
+                              ),
+                            );
+                            if (updatedActivities != null) {
+                              setState(() {
+                                _dailyActivities = updatedActivities;
+                              });
+                              await _firestoreService.saveDailyActivities(widget.user.uid, _dailyActivities);
                             }
                           },
-                        );
-                      }).toList(),
-                    ],
-                  ),
+                          child: const Text('Manage'),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 10),
+                    ..._dailyActivities.keys.map((activity) {
+                      return CheckboxListTile(
+                        title: Text(activity),
+                        value: _dailyActivities[activity],
+                        onChanged: (newValue) async {
+                          setState(() {
+                            _dailyActivities[activity] = newValue!;
+                          });
+                          await _firestoreService.saveDailyActivities(widget.user.uid, _dailyActivities);
+                          if (newValue == true) {
+                            await _firestoreService.addAccomplishment(widget.user.uid, activity);
+                            final encouragement = await _cloudFunctionService.generateEncouragement(activity);
+                            _showEncouragement(encouragement);
+                          }
+                        },
+                      );
+                    }).toList(),
+                  ],
                 ),
               ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );

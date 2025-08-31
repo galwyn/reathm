@@ -1,8 +1,7 @@
-import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:intl/intl.dart';
-import 'firestore_service.dart';
 
 class HistoryPage extends StatefulWidget {
   final User user;
@@ -10,62 +9,116 @@ class HistoryPage extends StatefulWidget {
   const HistoryPage({Key? key, required this.user}) : super(key: key);
 
   @override
-  _HistoryPageState createState() => _HistoryPageState();
+  State<HistoryPage> createState() => _HistoryPageState();
 }
 
 class _HistoryPageState extends State<HistoryPage> {
-  final FirestoreService _firestoreService = FirestoreService();
-  List<DocumentSnapshot> _accomplishments = [];
-  bool _isLoading = true;
+  DateTime _selectedDay = DateTime.now();
 
-  @override
-  void initState() {
-    super.initState();
-    _fetchAccomplishments();
+  void _goToPreviousDay() {
+    setState(() {
+      _selectedDay = _selectedDay.subtract(const Duration(days: 1));
+    });
   }
 
-  Future<void> _fetchAccomplishments() async {
-    final snapshot = await _firestoreService.getAccomplishments(widget.user.uid);
-    if (mounted) {
-      setState(() {
-        _accomplishments = snapshot.docs;
-        _isLoading = false;
-      });
-    }
+  void _goToNextDay() {
+    setState(() {
+      _selectedDay = _selectedDay.add(const Duration(days: 1));
+    });
   }
 
-  @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: _isLoading
-          ? const Center(child: CircularProgressIndicator())
-          : _accomplishments.isEmpty
-              ? const Center(child: Text('No accomplishments yet.'))
-              : RefreshIndicator(
-                  onRefresh: _fetchAccomplishments,
-                  child: ListView.builder(
-                    padding: const EdgeInsets.all(8.0),
-                    itemCount: _accomplishments.length,
-                    itemBuilder: (context, index) {
-                      final accomplishment = _accomplishments[index];
-                      final data = accomplishment.data() as Map<String, dynamic>;
-                      final activity = data['activity'] as String;
-                      final timestamp = data['timestamp'] as Timestamp?;
-                      final formattedDate = timestamp != null
-                          ? DateFormat.yMMMd().add_jm().format(timestamp.toDate())
-                          : 'No date';
-
-                      return Card(
-                        elevation: 2,
-                        margin: const EdgeInsets.symmetric(vertical: 8.0),
-                        child: ListTile(
-                          title: Text(activity, style: Theme.of(context).textTheme.titleMedium),
-                          subtitle: Text(formattedDate),
-                        ),
-                      );
-                    },
-                  ),
-                ),
+    print('Building HistoryPage for user: ${widget.user.uid}');
+    return Column(
+      children: [
+        _buildDateNavigator(),
+        _buildActivitiesList(),
+      ],
     );
+  }
+
+  Widget _buildDateNavigator() {
+    return Padding(
+      padding: const EdgeInsets.all(8.0),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          IconButton(
+            icon: const Icon(Icons.arrow_back),
+            onPressed: _goToPreviousDay,
+          ),
+          Text(
+            DateFormat('MMMM d, yyyy').format(_selectedDay),
+            style: Theme.of(context).textTheme.headlineSmall,
+          ),
+          IconButton(
+            icon: const Icon(Icons.arrow_forward),
+            onPressed: _goToNextDay,
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildActivitiesList() {
+    final startOfDay = DateTime(_selectedDay.year, _selectedDay.month, _selectedDay.day);
+    final endOfDay = startOfDay.add(const Duration(days: 1));
+
+    return Expanded(
+      child: StreamBuilder<QuerySnapshot>(
+        stream: FirebaseFirestore.instance
+            .collection('users')
+            .doc(widget.user.uid)
+            .collection('activities')
+            .where('timestamp', isGreaterThanOrEqualTo: startOfDay)
+            .where('timestamp', isLessThan: endOfDay)
+            .orderBy('timestamp', descending: true)
+            .snapshots(),
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return const Center(child: CircularProgressIndicator());
+          }
+          if (snapshot.hasError) {
+            return Center(child: Text('Error: ${snapshot.error}'));
+          }
+          if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
+            return const Center(child: Text('No activities for this day.'));
+          }
+
+          return ListView.builder(
+            itemCount: snapshot.data!.docs.length,
+            itemBuilder: (context, index) {
+              final doc = snapshot.data!.docs[index];
+              final activity = doc.data() as Map<String, dynamic>;
+              final activityType = activity['type'] as String;
+              final content = activity['content'] as String;
+              final timestamp = (activity['timestamp'] as Timestamp).toDate();
+
+              return Card(
+                margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                child: ListTile(
+                  leading: _getIconForActivityType(activityType),
+                  title: Text(content),
+                  subtitle: Text(DateFormat('h:mm a').format(timestamp)),
+                ),
+              );
+            },
+          );
+        },
+      ),
+    );
+  }
+
+  Icon _getIconForActivityType(String activityType) {
+    switch (activityType) {
+      case 'affirmation':
+        return const Icon(Icons.sentiment_very_satisfied, color: Colors.green);
+      case 'reflection':
+        return const Icon(Icons.lightbulb, color: Colors.amber);
+      case 'activity':
+        return const Icon(Icons.directions_walk, color: Colors.blue);
+      default:
+        return const Icon(Icons.help);
+    }
   }
 }

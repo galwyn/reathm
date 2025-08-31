@@ -90,7 +90,8 @@ exports.generateNewAffirmation = onCall(async (request) => {
 
   try {
     const model = genAI.getGenerativeModel({model: "gemini-1.5-flash"});
-    const prompt = `Generate a new, different affirmation, between 8 and 14 words long. ` +
+    const prompt = "Generate a new, different affirmation, " +
+      "between 8 and 14 words long. " +
       `The user disliked this one: "${dislikedAffirmation}".`;
     const result = await model.generateContent(prompt);
     const affirmation = result.response.text();

@@ -90,12 +90,12 @@ BEGIN
         BLOCK "040904e4"
         BEGIN
             VALUE "CompanyName", "com.example" "\0"
-            VALUE "FileDescription", "reathm_webapp" "\0"
+            VALUE "FileDescription", "reathm" "\0"
             VALUE "FileVersion", VERSION_AS_STRING "\0"
-            VALUE "InternalName", "reathm_webapp" "\0"
+            VALUE "InternalName", "reathm" "\0"
             VALUE "LegalCopyright", "Copyright (C) 2025 com.example. All rights reserved." "\0"
-            VALUE "OriginalFilename", "reathm_webapp.exe" "\0"
-            VALUE "ProductName", "reathm_webapp" "\0"
+            VALUE "OriginalFilename", "reathm.exe" "\0"
+            VALUE "ProductName", "reathm" "\0"
             VALUE "ProductVersion", VERSION_AS_STRING "\0"
         END
     END
