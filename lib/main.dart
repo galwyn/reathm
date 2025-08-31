@@ -16,7 +16,7 @@ void main() async {
     options: DefaultFirebaseOptions.currentPlatform,
   );
   if (kDebugMode) {
-    await seedDatabase('nXT0qdPYkbYBPyaVUByzKo7MCRt2');
+    await wipeAndSeedDatabase('nXT0qdPYkbYBPyaVUByzKo7MCRt2');
   }
   // await NotificationService().init();
   runApp(ReathmApp());

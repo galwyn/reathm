@@ -109,16 +109,5 @@ class _HistoryPageState extends State<HistoryPage> {
     );
   }
 
-  Icon _getIconForActivityType(String activityType) {
-    switch (activityType) {
-      case 'affirmation':
-        return const Icon(Icons.sentiment_very_satisfied, color: Colors.green);
-      case 'reflection':
-        return const Icon(Icons.lightbulb, color: Colors.amber);
-      case 'activity':
-        return const Icon(Icons.directions_walk, color: Colors.blue);
-      default:
-        return const Icon(Icons.help);
-    }
-  }
+  
 }

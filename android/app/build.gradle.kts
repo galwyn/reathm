@@ -8,6 +8,9 @@ plugins {
     id("dev.flutter.flutter-gradle-plugin")
 }
 
+import java.util.Properties
+import java.io.FileInputStream
+
 android {
     namespace = "com.reathm.motivate"
     compileSdk = flutter.compileSdkVersion
@@ -35,12 +38,18 @@ android {
     }
 
     signingConfigs {
-         create("release") {
-             storeFile = file(System.getenv("KEYSTORE_PATH") ?: "upload-keystore.jks")
-             storePassword = System.getenv("KEYSTORE_PASSWORD") ?: "t@63A-FamKAW"
-             keyAlias = System.getenv("KEY_ALIAS") ?: "upload"
-             keyPassword = System.getenv("KEY_PASSWORD") ?: "t@63A-FamKAW"
-         }
+        create("release") {
+            val keyProperties = Properties()
+            val keyPropertiesFile = rootProject.file("key.properties")
+            if (keyPropertiesFile.exists()) {
+                keyProperties.load(FileInputStream(keyPropertiesFile))
+            }
+
+            storeFile = file(keyProperties.getProperty("storeFile", "upload-keystore.jks"))
+            storePassword = keyProperties.getProperty("storePassword")
+            keyAlias = keyProperties.getProperty("keyAlias")
+            keyPassword = keyProperties.getProperty("keyPassword")
+        }
     }
 
     buildTypes {
