@@ -1,9 +1,9 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
     <application
-        android:label="reathm"
+        android:label="Reathm"
         android:name="${applicationName}"
-        android:icon="@drawable/ic_launcher_background"
-        android:roundIcon="@drawable/ic_launcher_background">
+        android:icon="@mipmap/ic_launcher"
+        android:roundIcon="@mipmap/ic_launcher">
         <activity
             android:name=".MainActivity"
             android:exported="true"

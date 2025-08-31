@@ -48,5 +48,8 @@ app.*.map.json
 app_logs.txt
 /android/key.properties
 /android/app/google-services.json
-test_google_signin_app/
 lib/firebase_options.dart
+
+# Added by Gemini
+update_android_icon.sh
+*.png

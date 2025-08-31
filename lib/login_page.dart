@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:google_sign_in/google_sign_in.dart';
+import 'package:package_info_plus/package_info_plus.dart';
 import 'auth_service.dart';
 import 'firestore_service.dart';
 
@@ -14,6 +15,26 @@ class LoginPage extends StatefulWidget {
 class _LoginPageState extends State<LoginPage> {
   final FirestoreService _firestoreService = FirestoreService();
   bool _isSigningIn = false;
+
+  PackageInfo _packageInfo = PackageInfo(
+    appName: 'Unknown',
+    packageName: 'Unknown',
+    version: 'Unknown',
+    buildNumber: 'Unknown',
+  );
+
+  @override
+  void initState() {
+    super.initState();
+    _initPackageInfo();
+  }
+
+  Future<void> _initPackageInfo() async {
+    final info = await PackageInfo.fromPlatform();
+    setState(() {
+      _packageInfo = info;
+    });
+  }
 
   Future<void> _signInWithGoogle() async {
     // Don't do anything if a sign-in is already in progress
@@ -74,12 +95,22 @@ class _LoginPageState extends State<LoginPage> {
         title: const Text('Login'),
       ),
       body: Center(
-        child: _isSigningIn
-            ? const CircularProgressIndicator()
-            : ElevatedButton(
-                onPressed: _signInWithGoogle,
-                child: const Text('Sign in with Google'),
-              ),
+        child: Column( // Use Column to arrange widgets vertically
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            _isSigningIn
+                ? const CircularProgressIndicator()
+                : ElevatedButton(
+                    onPressed: _signInWithGoogle,
+                    child: const Text('Sign in with Google'),
+                  ),
+            const SizedBox(height: 20), // Add some spacing
+            Text(
+              'Version: ${_packageInfo.version}',
+              style: Theme.of(context).textTheme.bodySmall,
+            ),
+          ],
+        ),
       ),
     );
   }
