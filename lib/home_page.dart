@@ -269,6 +269,7 @@ class _HomePageState extends State<HomePage> {
                 ),
 
                 // Daily Reminder Card
+                /*
                 Card(
                   elevation: 4,
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
@@ -324,6 +325,8 @@ class _HomePageState extends State<HomePage> {
                     ),
                   ),
                 ),
+                */
+                // TODO: Re-enable daily reminder functionality
               ],
             ),
             const SizedBox(height: 20),

@@ -61,18 +61,15 @@ class _HistoryPageState extends State<HistoryPage> {
   }
 
   Widget _buildActivitiesList() {
-    final startOfDay = DateTime(_selectedDay.year, _selectedDay.month, _selectedDay.day);
-    final endOfDay = startOfDay.add(const Duration(days: 1));
+    final date = DateFormat('yyyy-MM-dd').format(_selectedDay);
 
     return Expanded(
-      child: StreamBuilder<QuerySnapshot>(
+      child: StreamBuilder<DocumentSnapshot>(
         stream: FirebaseFirestore.instance
             .collection('users')
             .doc(widget.user.uid)
-            .collection('activities')
-            .where('timestamp', isGreaterThanOrEqualTo: startOfDay)
-            .where('timestamp', isLessThan: endOfDay)
-            .orderBy('timestamp', descending: true)
+            .collection('daily_activities')
+            .doc(date)
             .snapshots(),
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
@@ -81,25 +78,28 @@ class _HistoryPageState extends State<HistoryPage> {
           if (snapshot.hasError) {
             return Center(child: Text('Error: ${snapshot.error}'));
           }
-          if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
+          if (!snapshot.hasData || !snapshot.data!.exists) {
+            return const Center(child: Text('No activities for this day.'));
+          }
+
+          final data = snapshot.data!.data() as Map<String, dynamic>;
+          final activities = Map<String, bool>.from(data['activities'] ?? {});
+
+          if (activities.isEmpty) {
             return const Center(child: Text('No activities for this day.'));
           }
 
           return ListView.builder(
-            itemCount: snapshot.data!.docs.length,
+            itemCount: activities.length,
             itemBuilder: (context, index) {
-              final doc = snapshot.data!.docs[index];
-              final activity = doc.data() as Map<String, dynamic>;
-              final activityType = activity['type'] as String;
-              final content = activity['content'] as String;
-              final timestamp = (activity['timestamp'] as Timestamp).toDate();
+              final activity = activities.keys.elementAt(index);
+              final completed = activities[activity]!;
 
               return Card(
                 margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                 child: ListTile(
-                  leading: _getIconForActivityType(activityType),
-                  title: Text(content),
-                  subtitle: Text(DateFormat('h:mm a').format(timestamp)),
+                  leading: completed ? const Icon(Icons.check_box, color: Colors.green) : const Icon(Icons.check_box_outline_blank, color: Colors.grey),
+                  title: Text(activity),
                 ),
               );
             },

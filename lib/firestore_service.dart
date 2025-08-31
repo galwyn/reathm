@@ -1,5 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:intl/intl.dart';
 
 class FirestoreService {
   final FirebaseFirestore _db;
@@ -21,11 +22,13 @@ class FirestoreService {
 
   Future<void> saveDailyActivities(String uid, Map<String, bool> dailyActivities) {
     print('Saving daily activities for user $uid: $dailyActivities');
-    return _db.collection('user_activities').doc(uid).set({'activities': dailyActivities});
+    final date = DateFormat('yyyy-MM-dd').format(DateTime.now());
+    return _db.collection('users').doc(uid).collection('daily_activities').doc(date).set({'activities': dailyActivities});
   }
 
   Future<Map<String, bool>> getDailyActivities(String uid) async {
-    final doc = await _db.collection('user_activities').doc(uid).get();
+    final date = DateFormat('yyyy-MM-dd').format(DateTime.now());
+    final doc = await _db.collection('users').doc(uid).collection('daily_activities').doc(date).get();
     if (doc.exists && doc.data()!['activities'] != null) {
       return Map<String, bool>.from(doc.data()!['activities']);
     }
