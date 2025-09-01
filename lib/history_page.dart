@@ -87,8 +87,12 @@ class _HistoryPageState extends State<HistoryPage> {
               return ListView.builder(
                 itemCount: accomplishments.length,
                 itemBuilder: (context, index) {
-                  return ListTile(
-                    title: Text(accomplishments[index]),
+                  return Card(
+                    margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                    child: ListTile(
+                      leading: const Icon(Icons.check_circle, color: Colors.green),
+                      title: Text(accomplishments[index]),
+                    ),
                   );
                 },
               );

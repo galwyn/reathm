@@ -39,6 +39,37 @@ class _ActivityCalendarPageState extends State<ActivityCalendarPage> {
               focusedDay: DateTime.now(),
               availableCalendarFormats: const {CalendarFormat.month: 'Month'},
               calendarBuilders: CalendarBuilders(
+                todayBuilder: (context, day, focusedDay) {
+                  final isCompleted = events[DateTime.utc(day.year, day.month, day.day)] != null;
+                  if (isCompleted) {
+                    return Container(
+                      margin: const EdgeInsets.all(4.0),
+                      alignment: Alignment.center,
+                      decoration: BoxDecoration(
+                        color: Colors.green.shade300,
+                        shape: BoxShape.circle,
+                        border: Border.all(color: Colors.purple.shade300, width: 2.0),
+                      ),
+                      child: Text(
+                        '${day.day}',
+                        style: const TextStyle(color: Colors.white),
+                      ),
+                    );
+                  } else {
+                    return Container(
+                      margin: const EdgeInsets.all(4.0),
+                      alignment: Alignment.center,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        border: Border.all(color: Colors.purple.shade300, width: 2.0),
+                      ),
+                      child: Text(
+                        '${day.day}',
+                        style: TextStyle(color: Colors.purple.shade300),
+                      ),
+                    );
+                  }
+                },
                 defaultBuilder: (context, day, focusedDay) {
                   if (events[DateTime.utc(day.year, day.month, day.day)] != null) {
                     return Container(
