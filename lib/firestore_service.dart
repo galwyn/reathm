@@ -1,53 +1,58 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'dart:math';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:intl/intl.dart';
 
 class FirestoreService {
-  final FirebaseFirestore _db;
+  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
-  FirestoreService({FirebaseFirestore? db}) : _db = db ?? FirebaseFirestore.instance;
-
-  // Setter for testing
-  set db(FirebaseFirestore instance) {
-    // This setter is now redundant but kept for compatibility with existing tests.
-  }
-
-  Future<void> saveUser(User user) {
-    return _db.collection('users').doc(user.uid).set({
-      'email': user.email,
-      'displayName': user.displayName,
-      'photoURL': user.photoURL,
-    }, SetOptions(merge: true));
-  }
-
-  Future<void> saveDailyActivities(String uid, Map<String, bool> dailyActivities) {
-    print('Saving daily activities for user $uid: $dailyActivities');
-    final date = DateFormat('yyyy-MM-dd').format(DateTime.now());
-    return _db.collection('users').doc(uid).collection('daily_activities').doc(date).set({'activities': dailyActivities});
-  }
-
-  Future<Map<String, bool>> getDailyActivities(String uid) async {
-    final date = DateFormat('yyyy-MM-dd').format(DateTime.now());
-    final doc = await _db.collection('users').doc(uid).collection('daily_activities').doc(date).get();
-    if (doc.exists && doc.data()!['activities'] != null) {
-      return Map<String, bool>.from(doc.data()!['activities']);
+  Future<Map<String, bool>> getDailyActivities(String userId) async {
+    final doc = await _firestore.collection('users').doc(userId).get();
+    if (doc.exists && doc.data()!.containsKey('daily_activities')) {
+      return Map<String, bool>.from(doc.data()!['daily_activities']);
     }
     return {};
   }
 
-  Future<void> addAccomplishment(String uid, String activity) {
-    return _db.collection('users').doc(uid).collection('accomplishments').add({
+  Future<void> saveDailyActivities(String userId, Map<String, bool> activities) async {
+    await _firestore.collection('users').doc(userId).set({
+      'daily_activities': activities,
+    }, SetOptions(merge: true));
+  }
+
+  Future<void> addAccomplishment(String userId, String activity) async {
+    await _firestore.collection('users').doc(userId).collection('accomplishments').add({
       'activity': activity,
       'timestamp': FieldValue.serverTimestamp(),
     });
   }
 
-  Future<QuerySnapshot> getAccomplishments(String uid) {
-    return _db.collection('users').doc(uid).collection('accomplishments').orderBy('timestamp', descending: true).get();
+  Future<List<String>> getAccomplishedActivities(String userId) async {
+    final snapshot = await _firestore
+        .collection('users')
+        .doc(userId)
+        .collection('accomplishments')
+        .orderBy('timestamp', descending: true)
+        .get();
+    final activities = snapshot.docs.map((doc) => doc['activity'] as String).toList();
+    return activities.toSet().toList(); // Return unique activities
   }
 
-  Future<void> addAffirmationFeedback(String uid, String affirmation, bool liked) {
-    return _db.collection('users').doc(uid).collection('affirmation_feedback').add({
+  Future<List<DateTime>> getActivityHistory(String userId, String activityName) async {
+    final QuerySnapshot snapshot = await _firestore
+        .collection('users')
+        .doc(userId)
+        .collection('accomplishments')
+        .where('activity', isEqualTo: activityName)
+        .get();
+
+    return snapshot.docs.map((doc) {
+      final timestamp = doc['timestamp'] as Timestamp;
+      return timestamp.toDate();
+    }).toList();
+  }
+
+  Future<void> addAffirmationFeedback(String userId, String affirmation, bool liked) async {
+    await _firestore.collection('users').doc(userId).collection('affirmation_feedback').add({
       'affirmation': affirmation,
       'liked': liked,
       'timestamp': FieldValue.serverTimestamp(),
@@ -55,11 +60,44 @@ class FirestoreService {
   }
 
   Future<String?> getRandomSeededAffirmation() async {
-    final snapshot = await _db.collection('seeded_affirmations').get();
+    final snapshot = await _firestore.collection('seeded_affirmations').get();
     if (snapshot.docs.isNotEmpty) {
-      final randomIndex = DateTime.now().millisecondsSinceEpoch % snapshot.docs.length;
-      return snapshot.docs[randomIndex].data()['text'] as String?;
+      final randomIndex = Random().nextInt(snapshot.docs.length);
+      return snapshot.docs[randomIndex]['text'] as String?;
     }
     return null;
+  }
+
+  Future<List<Map<String, dynamic>>> getAllAccomplishments(String userId) async {
+    final snapshot = await _firestore
+        .collection('users')
+        .doc(userId)
+        .collection('accomplishments')
+        .orderBy('timestamp', descending: true)
+        .get();
+    return snapshot.docs.map((doc) => doc.data()).toList();
+  }
+
+  Future<List<String>> getAccomplishmentsForDay(String userId, DateTime day) async {
+    final startOfDay = DateTime(day.year, day.month, day.day);
+    final endOfDay = startOfDay.add(const Duration(days: 1));
+
+    final snapshot = await _firestore
+        .collection('users')
+        .doc(userId)
+        .collection('accomplishments')
+        .where('timestamp', isGreaterThanOrEqualTo: startOfDay)
+        .where('timestamp', isLessThan: endOfDay)
+        .get();
+
+    return snapshot.docs.map((doc) => doc['activity'] as String).toList();
+  }
+
+  Future<void> saveUser(User user) async {
+    await _firestore.collection('users').doc(user.uid).set({
+      'email': user.email,
+      'displayName': user.displayName,
+      'lastLogin': FieldValue.serverTimestamp(),
+    }, SetOptions(merge: true));
   }
 }

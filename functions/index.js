@@ -56,7 +56,8 @@ exports.generateEncouragement = onCall(async (request) => {
 
   try {
     const model = genAI.getGenerativeModel({model: "gemini-1.5-flash"});
-    const prompt = `Encourage someone who completed: ${completedActivity}.`;
+    const prompt = "Generate a single, short, encouraging sentence for " +
+      `someone who completed this activity: ${completedActivity}.`;
     const result = await model.generateContent(prompt);
     const encouragement = result.response.text();
     logger.info("Encouragement generated successfully",
