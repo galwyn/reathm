@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:reathm/history_page.dart';
 import 'package:reathm/home_page.dart';
 import 'auth_service.dart';
+import 'activity_calendar_page.dart';
 
 class MainScaffold extends StatefulWidget {
   final User user;
@@ -24,6 +25,7 @@ class _MainScaffoldState extends State<MainScaffold> {
     _pages = [
       HomePage(user: widget.user),
       HistoryPage(user: widget.user),
+      ActivityCalendarPage(user: widget.user),
     ];
   }
 
@@ -33,14 +35,25 @@ class _MainScaffoldState extends State<MainScaffold> {
     });
   }
 
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
+  AppBar _buildAppBar() {
+    String title;
+    switch (_selectedIndex) {
+      case 1:
+        title = 'History';
+        break;
+      case 2:
+        title = 'Activity Calendar';
+        break;
+      default:
+        title = 'Reathm';
+    }
+
+    if (_selectedIndex == 0) {
+      return AppBar(
         title: const Text('Reathm'),
         actions: [
           PopupMenuButton<String>(
-            offset: const Offset(0, 50), // Adjust offset to position menu below icon
+            offset: const Offset(0, 50),
             icon: CircleAvatar(
               backgroundImage: widget.user.photoURL != null
                   ? NetworkImage(widget.user.photoURL!)
@@ -63,7 +76,7 @@ class _MainScaffoldState extends State<MainScaffold> {
             },
             itemBuilder: (BuildContext context) => <PopupMenuEntry<String>>[
               PopupMenuItem<String>(
-                enabled: false, // Make this item non-selectable
+                enabled: false,
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -92,7 +105,18 @@ class _MainScaffoldState extends State<MainScaffold> {
             ],
           ),
         ],
-      ),
+      );
+    } else {
+      return AppBar(
+        title: Text(title),
+      );
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: _buildAppBar(),
       body: _pages[_selectedIndex],
       bottomNavigationBar: BottomNavigationBar(
         items: const <BottomNavigationBarItem>[
@@ -103,6 +127,10 @@ class _MainScaffoldState extends State<MainScaffold> {
           BottomNavigationBarItem(
             icon: Icon(Icons.history),
             label: 'History',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.calendar_today),
+            label: 'Calendar',
           ),
         ],
         currentIndex: _selectedIndex,
