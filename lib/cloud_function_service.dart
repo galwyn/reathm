@@ -35,4 +35,14 @@ class CloudFunctionService {
       return 'Error generating new affirmation.';
     }
   }
+
+  Future<void> deleteUserAccount() async {
+    try {
+      final HttpsCallable callable = _functions.httpsCallable('deleteUserAccount');
+      await callable.call();
+    } catch (e) {
+      print('Error calling deleteUserAccount: $e');
+      rethrow;
+    }
+  }
 }

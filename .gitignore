@@ -63,3 +63,7 @@ lib/firebase_options.dart
 # Added by Gemini
 update_android_icon.sh # Script for updating icons
 *.png # Image files, likely for icons or assets
+
+# Firebase build artifacts
+.firebase/hosting.*.cache
+.firebase/reathm-cli/hosting/

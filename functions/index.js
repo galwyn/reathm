@@ -1,7 +1,10 @@
 const {onCall} = require("firebase-functions/v2/https");
 const logger = require("firebase-functions/logger");
 const functions = require("firebase-functions");
+const admin = require("firebase-admin");
 const {GoogleGenerativeAI} = require("@google/generative-ai");
+
+admin.initializeApp();
 
 
 exports.generateAffirmation = onCall(async (request) => {
@@ -104,6 +107,30 @@ exports.generateNewAffirmation = onCall(async (request) => {
     throw new functions.https.HttpsError(
         "internal",
         "Error generating new affirmation",
+    );
+  }
+});
+
+exports.deleteUserAccount = onCall(async (request) => {
+  const uid = request.auth.uid;
+  if (!uid) {
+    throw new functions.https.HttpsError(
+        "unauthenticated",
+        "The function must be called while authenticated.",
+    );
+  }
+  try {
+    // Delete user data from Firestore
+    await admin.firestore().collection("users").doc(uid).delete();
+    // Delete user from Firebase Authentication
+    await admin.auth().deleteUser(uid);
+    logger.info(`Successfully deleted user ${uid}`);
+    return {success: true};
+  } catch (error) {
+    logger.error(`Error deleting user ${uid}:`, error);
+    throw new functions.https.HttpsError(
+        "internal",
+        "Error deleting user account.",
     );
   }
 });

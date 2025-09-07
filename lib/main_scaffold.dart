@@ -4,6 +4,7 @@ import 'package:reathm/history_page.dart';
 import 'package:reathm/home_page.dart';
 import 'auth_service.dart';
 import 'activity_calendar_page.dart';
+import 'cloud_function_service.dart';
 
 class MainScaffold extends StatefulWidget {
   final User user;
@@ -16,6 +17,7 @@ class MainScaffold extends StatefulWidget {
 
 class _MainScaffoldState extends State<MainScaffold> {
   int _selectedIndex = 0;
+  final CloudFunctionService _cloudFunctionService = CloudFunctionService();
 
   late final List<Widget> _pages;
 
@@ -72,6 +74,38 @@ class _MainScaffoldState extends State<MainScaffold> {
                 } catch (e) {
                   print("Error signing out: $e");
                 }
+              } else if (value == 'deleteAccount') {
+                showDialog(
+                  context: context,
+                  builder: (BuildContext context) {
+                    return AlertDialog(
+                      title: const Text('Delete Account'),
+                      content: const Text(
+                          'Are you sure you want to delete your account? This action is irreversible.'),
+                      actions: <Widget>[
+                        TextButton(
+                          child: const Text('Cancel'),
+                          onPressed: () {
+                            Navigator.of(context).pop();
+                          },
+                        ),
+                        TextButton(
+                          child: const Text('Delete', style: TextStyle(color: Colors.red)),
+                          onPressed: () async {
+                            try {
+                              await _cloudFunctionService.deleteUserAccount();
+                              await AuthService.googleSignIn.disconnect();
+                              await FirebaseAuth.instance.signOut();
+                            } catch (e) {
+                              print("Error deleting account: $e");
+                            }
+                            Navigator.of(context).pop();
+                          },
+                        ),
+                      ],
+                    );
+                  },
+                );
               }
             },
             itemBuilder: (BuildContext context) => <PopupMenuEntry<String>>[
@@ -92,6 +126,16 @@ class _MainScaffoldState extends State<MainScaffold> {
                 ),
               ),
               const PopupMenuDivider(),
+              const PopupMenuItem<String>(
+                value: 'deleteAccount',
+                child: Row(
+                  children: [
+                    Icon(Icons.delete, color: Colors.red),
+                    SizedBox(width: 8),
+                    Text('Delete Account', style: TextStyle(color: Colors.red)),
+                  ],
+                ),
+              ),
               const PopupMenuItem<String>(
                 value: 'signOut',
                 child: Row(
