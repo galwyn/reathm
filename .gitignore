@@ -62,7 +62,8 @@ lib/firebase_options.dart
 
 # Added by Gemini
 update_android_icon.sh # Script for updating icons
-*.png # Image files, likely for icons or assets
+*.jks # Java KeyStore files (e.g., upload-keystore.jks)
+/android/app/*.jks # Specific keystore file in Android app directory
 
 # Firebase build artifacts
 .firebase/hosting.*.cache

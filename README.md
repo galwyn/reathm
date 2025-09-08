@@ -48,3 +48,24 @@ Reathm is a mobile application designed to help you start your day with a positi
     *   **Firestore:** To store user data, activities, and affirmations.
     *   **Cloud Functions:** To interact with the Gemini API.
 *   **AI:** [Google Gemini](https://ai.google.dev/)
+
+## Building for Release
+
+Building Reathm for release (e.g., for the Google Play Store or Apple App Store) requires specific credentials that are not stored in this repository for security reasons.
+
+### Android Signing Credentials
+
+For Android releases, you will need the following files:
+
+*   `android/key.properties`: Contains the keystore password, key alias, and key password.
+*   `android/app/upload-keystore.jks`: The Java KeyStore file containing your signing key.
+
+These files are critical for signing your Android application. They should be securely stored and shared with team members via a secure method (e.g., a password manager or encrypted cloud storage). **Never commit these files to Git.**
+
+### Obtaining Credentials
+
+If you are a new team member or need access to these credentials, please contact [Your Team Lead/Administrator] to obtain them securely.
+
+### Web Deployment Credentials
+
+For deploying the web application to Firebase Hosting, you will need appropriate Firebase project access and authentication.
