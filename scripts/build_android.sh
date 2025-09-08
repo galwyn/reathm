@@ -9,6 +9,10 @@ then
     exit 1
 fi
 
+# Increment the build number
+echo "Incrementing build number..."
+dart tool/increment_build_number.dart
+
 # Clean previous builds
 flutter clean
 

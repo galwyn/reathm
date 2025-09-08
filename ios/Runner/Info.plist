@@ -43,6 +43,45 @@
 	</array>
 	<key>CADisableMinimumFrameDurationOnPhone</key>
 	<true/>
+	<key>GIDClientID</key>
+	<string>591919076410-68tmquddki886p0n0gcicf9i5opg1i81.apps.googleusercontent.com</string>
+	<key>CFBundleURLTypes</key>
+	<array>
+		<dict>
+			<key>CFBundleTypeRole</key>
+			<string>Editor</string>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>com.googleusercontent.apps.591919076410-68tmquddki886p0n0gcicf9i5opg1i81</string>
+			</array>
+		</dict>
+	</array>
+	<key>GIDClientID</key>
+	<string>591919076410-68tmquddki886p0n0gcicf9i5opg1i81.apps.googleusercontent.com</string>
+	<key>CFBundleURLTypes</key>
+	<array>
+		<dict>
+			<key>CFBundleTypeRole</key>
+			<string>Editor</string>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>com.googleusercontent.apps.591919076410-68tmquddki886p0n0gcicf9i5opg1i81</string>
+			</array>
+		</dict>
+	</array>
+	<key>GIDClientID</key>
+	<string>591919076410-68tmquddki886p0n0gcicf9i5opg1i81.apps.googleusercontent.com</string>
+	<key>CFBundleURLTypes</key>
+	<array>
+		<dict>
+			<key>CFBundleTypeRole</key>
+			<string>Editor</string>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>com.googleusercontent.apps.591919076410-68tmquddki886p0n0gcicf9i5opg1i81</string>
+			</array>
+		</dict>
+	</array>
 	<key>UIApplicationSupportsIndirectInputEvents</key>
 	<true/>
 </dict>
