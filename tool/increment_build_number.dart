@@ -7,7 +7,7 @@ void main() {
   final String pubspecContent = pubspecFile.readAsStringSync();
   final YamlEditor yamlEditor = YamlEditor(pubspecContent);
 
-  final String? currentVersion = yamlEditor.parse(pubspecContent)['version']?.toString();
+  final String? currentVersion = (loadYaml(pubspecContent) as YamlMap)['version']?.toString();
 
   if (currentVersion == null) {
     print('Error: "version" not found in pubspec.yaml');
@@ -23,10 +23,10 @@ void main() {
   }
 
   buildNumber++;
-  final String newVersion = '\$semVer+\$buildNumber';
+  final String newVersion = '$semVer+$buildNumber';
 
   yamlEditor.update(['version'], newVersion);
   pubspecFile.writeAsStringSync(yamlEditor.toString());
 
-  print('Build number incremented to: \$newVersion');
+  print('Build number incremented to: $newVersion');
 }
