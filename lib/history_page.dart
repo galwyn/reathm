@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:intl/intl.dart';
 import 'firestore_service.dart';
+import 'package:reathm/theme/theme_extensions.dart';
 
 class HistoryPage extends StatefulWidget {
   final User user;
@@ -59,7 +60,7 @@ class _HistoryPageState extends State<HistoryPage> {
               ),
               Text(
                 DateFormat.yMMMd().format(_selectedDay),
-                style: Theme.of(context).textTheme.headlineSmall,
+                style: context.textTheme.headlineSmall,
               ),
               IconButton(
                 icon: const Icon(Icons.arrow_forward_ios),
@@ -79,7 +80,23 @@ class _HistoryPageState extends State<HistoryPage> {
                 return const Center(child: Text('Error loading accomplishments.'));
               }
               if (!snapshot.hasData || snapshot.data!.isEmpty) {
-                return const Center(child: Text('No accomplishments for this day.'));
+                return Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(
+                        Icons.inbox_outlined,
+                        size: 80,
+                        color: context.colors.secondary,
+                      ),
+                      const SizedBox(height: 16),
+                      Text(
+                        'No accomplishments for this day.',
+                        style: context.textTheme.bodyLarge,
+                      ),
+                    ],
+                  ),
+                );
               }
 
               final accomplishments = snapshot.data!;
@@ -90,7 +107,7 @@ class _HistoryPageState extends State<HistoryPage> {
                   return Card(
                     margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                     child: ListTile(
-                      leading: const Icon(Icons.check_circle, color: Colors.green),
+                      leading: Icon(Icons.check_circle, color: context.colors.secondary),
                       title: Text(accomplishments[index]),
                     ),
                   );

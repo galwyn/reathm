@@ -5,6 +5,7 @@ import 'package:reathm/home_page.dart';
 import 'auth_service.dart';
 import 'activity_calendar_page.dart';
 import 'cloud_function_service.dart';
+import 'package:reathm/theme/theme_extensions.dart';
 
 class MainScaffold extends StatefulWidget {
   final User user;
@@ -90,7 +91,7 @@ class _MainScaffoldState extends State<MainScaffold> {
                           },
                         ),
                         TextButton(
-                          child: const Text('Delete', style: TextStyle(color: Colors.red)),
+                          child: Text('Delete', style: TextStyle(color: context.colors.error)),
                           onPressed: () async {
                             try {
                               await _cloudFunctionService.deleteUserAccount();
@@ -120,7 +121,7 @@ class _MainScaffoldState extends State<MainScaffold> {
                     ),
                     Text(
                       widget.user.email ?? 'No Email',
-                      style: TextStyle(color: Colors.grey[600]),
+                      style: TextStyle(color: context.colors.onSurface.withOpacity(0.6)),
                     ),
                   ],
                 ),
@@ -130,9 +131,9 @@ class _MainScaffoldState extends State<MainScaffold> {
                 value: 'deleteAccount',
                 child: Row(
                   children: [
-                    Icon(Icons.delete, color: Colors.red),
+                    Icon(Icons.delete, color: context.colors.error),
                     SizedBox(width: 8),
-                    Text('Delete Account', style: TextStyle(color: Colors.red)),
+                    Text('Delete Account', style: TextStyle(color: context.colors.error)),
                   ],
                 ),
               ),
@@ -140,9 +141,9 @@ class _MainScaffoldState extends State<MainScaffold> {
                 value: 'signOut',
                 child: Row(
                   children: [
-                    Icon(Icons.logout, color: Colors.red),
+                    Icon(Icons.logout, color: context.colors.error),
                     SizedBox(width: 8),
-                    Text('Sign Out', style: TextStyle(color: Colors.red)),
+                    Text('Sign Out', style: TextStyle(color: context.colors.error)),
                   ],
                 ),
               ),
@@ -179,6 +180,9 @@ class _MainScaffoldState extends State<MainScaffold> {
         ],
         currentIndex: _selectedIndex,
         onTap: _onItemTapped,
+        selectedItemColor: context.colors.secondary,
+        unselectedItemColor: context.colors.onSurface.withOpacity(0.6),
+        backgroundColor: context.colors.surface,
       ),
     );
   }

@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:reathm/theme/theme_extensions.dart';
+
+import 'package:reathm/widgets/emoji_icon.dart';
 
 class ManageActivitiesPage extends StatefulWidget {
-  final Map<String, bool> dailyActivities;
+  final Map<String, Map<String, dynamic>> dailyActivities;
 
   const ManageActivitiesPage({Key? key, required this.dailyActivities}) : super(key: key);
 
@@ -10,7 +13,7 @@ class ManageActivitiesPage extends StatefulWidget {
 }
 
 class _ManageActivitiesPageState extends State<ManageActivitiesPage> {
-  late Map<String, bool> _dailyActivities;
+  late Map<String, Map<String, dynamic>> _dailyActivities;
 
   @override
   void initState() {
@@ -31,20 +34,26 @@ class _ManageActivitiesPageState extends State<ManageActivitiesPage> {
         ),
         body: ListView(
           children: _dailyActivities.keys.map((activity) {
-            return ListTile(
-              title: Text(activity),
-              trailing: IconButton(
-                icon: Icon(Icons.delete),
-                onPressed: () {
-                  setState(() {
-                    _dailyActivities.remove(activity);
-                  });
-                },
+            final emoji = _dailyActivities[activity]?['emoji'] as String? ?? '❓';
+            return Card(
+              margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              child: ListTile(
+                leading: EmojiIcon(emoji: emoji),
+                title: Text(activity),
+                trailing: IconButton(
+                  icon: Icon(Icons.delete, color: context.colors.error),
+                  onPressed: () {
+                    setState(() {
+                      _dailyActivities.remove(activity);
+                    });
+                  },
+                ),
               ),
             );
           }).toList(),
         ),
         floatingActionButton: FloatingActionButton(
+          backgroundColor: Theme.of(context).colorScheme.secondary,
           onPressed: () {
             showDialog(
               context: context,
@@ -66,7 +75,7 @@ class _ManageActivitiesPageState extends State<ManageActivitiesPage> {
                     TextButton(
                       onPressed: () {
                         setState(() {
-                          _dailyActivities[controller.text] = false;
+                          _dailyActivities[controller.text] = {'completed': false, 'emoji': '😊'};
                         });
                         Navigator.pop(context);
                       },

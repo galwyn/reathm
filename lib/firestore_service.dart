@@ -5,15 +5,15 @@ import 'package:firebase_auth/firebase_auth.dart';
 class FirestoreService {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
-  Future<Map<String, bool>> getDailyActivities(String userId) async {
+  Future<Map<String, Map<String, dynamic>>> getDailyActivities(String userId) async {
     final doc = await _firestore.collection('users').doc(userId).get();
     if (doc.exists && doc.data()!.containsKey('daily_activities')) {
-      return Map<String, bool>.from(doc.data()!['daily_activities']);
+      return Map<String, Map<String, dynamic>>.from(doc.data()!['daily_activities']);
     }
     return {};
   }
 
-  Future<void> saveDailyActivities(String userId, Map<String, bool> activities) async {
+  Future<void> saveDailyActivities(String userId, Map<String, Map<String, dynamic>> activities) async {
     await _firestore.collection('users').doc(userId).set({
       'daily_activities': activities,
     }, SetOptions(merge: true));

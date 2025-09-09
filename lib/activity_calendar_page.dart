@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:table_calendar/table_calendar.dart';
 import 'firestore_service.dart';
+import 'package:reathm/theme/theme_extensions.dart';
 
 class ActivityCalendarPage extends StatefulWidget {
   final User user;
@@ -41,18 +42,19 @@ class _ActivityCalendarPageState extends State<ActivityCalendarPage> {
               calendarBuilders: CalendarBuilders(
                 todayBuilder: (context, day, focusedDay) {
                   final isCompleted = events[DateTime.utc(day.year, day.month, day.day)] != null;
+                  final colorScheme = Theme.of(context).colorScheme;
                   if (isCompleted) {
                     return Container(
                       margin: const EdgeInsets.all(4.0),
                       alignment: Alignment.center,
                       decoration: BoxDecoration(
-                        color: Colors.green.shade300,
+                        color: context.colors.secondary,
                         shape: BoxShape.circle,
-                        border: Border.all(color: Colors.purple.shade300, width: 2.0),
+                        border: Border.all(color: context.colors.primary, width: 2.0),
                       ),
                       child: Text(
                         '${day.day}',
-                        style: const TextStyle(color: Colors.white),
+                        style: TextStyle(color: context.colors.onSecondary),
                       ),
                     );
                   } else {
@@ -61,27 +63,28 @@ class _ActivityCalendarPageState extends State<ActivityCalendarPage> {
                       alignment: Alignment.center,
                       decoration: BoxDecoration(
                         shape: BoxShape.circle,
-                        border: Border.all(color: Colors.purple.shade300, width: 2.0),
+                        border: Border.all(color: context.colors.primary, width: 2.0),
                       ),
                       child: Text(
                         '${day.day}',
-                        style: TextStyle(color: Colors.purple.shade300),
+                        style: TextStyle(color: context.colors.primary),
                       ),
                     );
                   }
                 },
                 defaultBuilder: (context, day, focusedDay) {
+                  final colorScheme = Theme.of(context).colorScheme;
                   if (events[DateTime.utc(day.year, day.month, day.day)] != null) {
                     return Container(
                       margin: const EdgeInsets.all(4.0),
                       alignment: Alignment.center,
                       decoration: BoxDecoration(
-                        color: Colors.green.shade300,
+                        color: context.colors.secondary,
                         shape: BoxShape.circle,
                       ),
                       child: Text(
                         '${day.day}',
-                        style: const TextStyle(color: Colors.white),
+                        style: TextStyle(color: context.colors.onSecondary),
                       ),
                     );
                   }

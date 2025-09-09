@@ -9,6 +9,10 @@ import 'package:timezone/timezone.dart' as tz;
 import 'manage_activities_page.dart';
 import 'package:timezone/data/latest.dart' as tzdata;
 import 'firestore_service.dart';
+import 'widgets/task_item.dart';
+import 'widgets/home_page/affirmation_card.dart';
+import 'widgets/home_page/reflection_timer_card.dart';
+import 'widgets/home_page/daily_activities_card.dart';
 
 class HomePage extends StatefulWidget {
   final User user;
@@ -24,7 +28,7 @@ class _HomePageState extends State<HomePage> {
   final NotificationService _notificationService = NotificationService();
   final FirestoreService _firestoreService = FirestoreService();
   String _affirmation = 'Loading affirmation...';
-  Map<String, bool> _dailyActivities = {};
+  Map<String, Map<String, dynamic>> _dailyActivities = {};
 
   int _selectedHour = 8; // Default reminder hour
   int _selectedMinute = 0; // Default reminder minute
@@ -159,11 +163,7 @@ class _HomePageState extends State<HomePage> {
   }
 
   Widget build(BuildContext context) {
-    final ColorScheme colorScheme = Theme.of(context).colorScheme.copyWith(
-      primary: Colors.deepPurple.shade300,
-      secondary: Colors.orange.shade300,
-      background: Colors.grey.shade100,
-    );
+    final ColorScheme colorScheme = Theme.of(context).colorScheme;
 
     return Scaffold(
       backgroundColor: colorScheme.background,
@@ -177,235 +177,71 @@ class _HomePageState extends State<HomePage> {
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   // Affirmation Section
-                  _buildAffirmationSection(colorScheme),
+                  AffirmationCard(
+                    affirmation: _affirmation,
+                    onNewAffirmation: _generateNewAffirmationFromAI,
+                    onFeedback: (liked) {
+                      _saveAffirmationFeedback(liked);
+                      if (!liked) {
+                        _cloudFunctionService.generateNewAffirmation(_affirmation).then((newAffirmation) {
+                          setState(() {
+                            _affirmation = newAffirmation;
+                          });
+                        });
+                      }
+                    },
+                  ),
                   const SizedBox(height: 20),
 
                   // Main Content Grid
-                  _buildMainGrid(colorScheme),
+                  ReflectionTimerCard(
+                    formattedDuration: _formatDuration(_remainingSeconds),
+                    isTimerRunning: _isTimerRunning,
+                    timerDuration: _timerDuration,
+                    onDurationChanged: (newValue) {
+                      setState(() {
+                        _timerDuration = newValue!;
+                        _remainingSeconds = (_timerDuration * 60).toInt();
+                      });
+                    },
+                    onStartStopPressed: _isTimerRunning ? _stopTimer : _startTimer,
+                  ),
                   const SizedBox(height: 20),
 
                   // Daily Activities Section
-                  _buildDailyActivitiesSection(colorScheme),
+                  DailyActivitiesCard(
+                    dailyActivities: _dailyActivities,
+                    onActivityChanged: (activity, newValue) async {
+                      setState(() {
+                        _dailyActivities[activity]?['completed'] = newValue;
+                      });
+                      await _firestoreService.saveDailyActivities(widget.user.uid, _dailyActivities);
+                      if (newValue == true) {
+                        await _firestoreService.addAccomplishment(widget.user.uid, activity);
+                        final encouragement = await _cloudFunctionService.generateEncouragement(activity);
+                        _showEncouragement(encouragement);
+                      }
+                    },
+                    onManage: () async {
+                      final updatedActivities = await Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => ManageActivitiesPage(dailyActivities: _dailyActivities),
+                        ),
+                      );
+                      if (updatedActivities != null) {
+                        setState(() {
+                          _dailyActivities = updatedActivities;
+                        });
+                        await _firestoreService.saveDailyActivities(widget.user.uid, _dailyActivities);
+                      }
+                    },
+                  ),
                 ],
               ),
             ),
           ),
         ),
-      ),
-    );
-  }
-
-  Widget _buildAffirmationSection(ColorScheme colorScheme) {
-    return Container(
-      padding: const EdgeInsets.all(24.0),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.grey.withOpacity(0.2),
-            spreadRadius: 2,
-            blurRadius: 8,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
-      child: Column(
-        children: [
-          Text(
-            _affirmation,
-            style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-              color: Colors.black87,
-              fontWeight: FontWeight.w500,
-            ),
-            textAlign: TextAlign.center,
-          ),
-          const SizedBox(height: 20),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-            children: [
-              ElevatedButton(
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: colorScheme.primary,
-                  foregroundColor: Colors.white,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(30),
-                  ),
-                ),
-                onPressed: _generateNewAffirmationFromAI,
-                child: const Text('New Affirmation'),
-              ),
-              IconButton(
-                icon: const Icon(Icons.thumb_up_outlined),
-                color: Colors.green,
-                onPressed: () => _saveAffirmationFeedback(true),
-              ),
-              IconButton(
-                icon: const Icon(Icons.thumb_down_outlined),
-                color: Colors.red,
-                onPressed: () {
-                  _saveAffirmationFeedback(false);
-                  _cloudFunctionService.generateNewAffirmation(_affirmation).then((newAffirmation) {
-                    setState(() {
-                      _affirmation = newAffirmation;
-                    });
-                  });
-                },
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildMainGrid(ColorScheme colorScheme) {
-    return _buildReflectionTimer(colorScheme);
-  }
-
-  Widget _buildReflectionTimer(ColorScheme colorScheme) {
-    return Container(
-      padding: const EdgeInsets.all(16.0),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.grey.withOpacity(0.2),
-            spreadRadius: 2,
-            blurRadius: 8,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Text(
-            'Reflection Timer',
-            style: Theme.of(context).textTheme.titleLarge?.copyWith(
-              fontWeight: FontWeight.bold,
-            ),
-            textAlign: TextAlign.center,
-          ),
-          const SizedBox(height: 10),
-          Text(
-            _formatDuration(_remainingSeconds),
-            style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-              color: colorScheme.primary,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-          const SizedBox(height: 10),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              DropdownButton<double>(
-                value: _timerDuration,
-                items: [0.5, 1.0, 2.0, 5.0, 10.0, 20.0].map((double value) {
-                  return DropdownMenuItem<double>(
-                    value: value,
-                    child: Text('$value min'),
-                  );
-                }).toList(),
-                onChanged: (newValue) {
-                  setState(() {
-                    _timerDuration = newValue!;
-                    _remainingSeconds = (_timerDuration * 60).toInt();
-                  });
-                },
-              ),
-              const SizedBox(width: 10),
-              ElevatedButton(
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: _isTimerRunning ? Colors.redAccent : colorScheme.primary,
-                  foregroundColor: Colors.white,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(30),
-                  ),
-                ),
-                onPressed: _isTimerRunning ? _stopTimer : _startTimer,
-                child: Text(_isTimerRunning ? 'Stop' : 'Start'),
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildDailyActivitiesSection(ColorScheme colorScheme) {
-    return Container(
-      padding: const EdgeInsets.all(16.0),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.grey.withOpacity(0.2),
-            spreadRadius: 2,
-            blurRadius: 8,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
-      child: Column(
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(
-                'Daily Activities',
-                style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              ElevatedButton(
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: colorScheme.secondary,
-                  foregroundColor: Colors.white,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(30),
-                  ),
-                ),
-                onPressed: () async {
-                  final updatedActivities = await Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => ManageActivitiesPage(dailyActivities: _dailyActivities),
-                    ),
-                  );
-                  if (updatedActivities != null) {
-                    setState(() {
-                      _dailyActivities = updatedActivities;
-                    });
-                    await _firestoreService.saveDailyActivities(widget.user.uid, _dailyActivities);
-                  }
-                },
-                child: const Text('Manage'),
-              ),
-            ],
-          ),
-          const SizedBox(height: 10),
-          ..._dailyActivities.keys.map((activity) {
-            return CheckboxListTile(
-              title: Text(activity),
-              value: _dailyActivities[activity],
-              onChanged: (newValue) async {
-                setState(() {
-                  _dailyActivities[activity] = newValue!;
-                });
-                await _firestoreService.saveDailyActivities(widget.user.uid, _dailyActivities);
-                if (newValue == true) {
-                  await _firestoreService.addAccomplishment(widget.user.uid, activity);
-                  final encouragement = await _cloudFunctionService.generateEncouragement(activity);
-                  _showEncouragement(encouragement);
-                }
-              },
-              activeColor: colorScheme.primary,
-            );
-          }).toList(),
-        ],
       ),
     );
   }

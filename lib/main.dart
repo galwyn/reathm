@@ -28,12 +28,48 @@ class ReathmApp extends StatelessWidget {
     return MaterialApp(
       title: 'Reathm',
       theme: ThemeData(
-        primaryColor: const Color(0xFF4285F4),
-        colorScheme: ColorScheme.fromSwatch().copyWith(
-          secondary: const Color(0xFFFFA726),
+        brightness: Brightness.dark,
+        primaryColor: const Color(0xFF1a1a2e),
+        colorScheme: const ColorScheme.dark(
+          primary: Color(0xFF1a1a2e),
+          secondary: Color(0xFFf7931e),
+          background: Color(0xFF16213e),
+          surface: Color(0xFF1f2a40),
+          onPrimary: Colors.white,
+          onSecondary: Colors.white,
+          onBackground: Colors.white,
+          onSurface: Colors.white,
+          error: Colors.redAccent,
+          onError: Colors.white,
         ),
-        scaffoldBackgroundColor: const Color(0xFFF5F5F5),
+        scaffoldBackgroundColor: const Color(0xFF16213e),
         visualDensity: VisualDensity.adaptivePlatformDensity,
+        textTheme: const TextTheme(
+          headlineSmall: TextStyle(fontSize: 24.0, fontWeight: FontWeight.bold),
+          titleLarge: TextStyle(fontSize: 20.0, fontWeight: FontWeight.bold),
+          bodyLarge: TextStyle(fontSize: 16.0),
+          bodyMedium: TextStyle(fontSize: 14.0),
+          bodySmall: TextStyle(fontSize: 12.0, color: Colors.grey),
+        ),
+        cardTheme: CardTheme(
+          elevation: 4.0,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12.0),
+          ),
+        ),
+        dialogTheme: DialogTheme(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12.0),
+          ),
+        ),
+        elevatedButtonTheme: ElevatedButtonThemeData(
+          style: ElevatedButton.styleFrom(
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12.0),
+            ),
+            padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 12.0),
+          ),
+        ),
       ),
       home: StreamBuilder<User?>(
         stream: FirebaseAuth.instance.authStateChanges(),
