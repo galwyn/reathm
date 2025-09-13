@@ -1,20 +1,15 @@
 plugins {
     id("com.android.application")
-    // START: FlutterFire Configuration
     id("com.google.gms.google-services")
-    // END: FlutterFire Configuration
     id("kotlin-android")
     // The Flutter Gradle Plugin must be applied after the Android and Kotlin Gradle plugins.
     id("dev.flutter.flutter-gradle-plugin")
 }
 
-import java.util.Properties
-import java.io.FileInputStream
-
 android {
     namespace = "com.reathm.motivate"
     compileSdk = flutter.compileSdkVersion
-    ndkVersion = "27.0.12077973"
+    ndkVersion = flutter.ndkVersion
 
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_11
@@ -37,37 +32,21 @@ android {
         versionName = flutter.versionName
     }
 
-    signingConfigs {
-        create("release") {
-            val keyProperties = Properties()
-            val keyPropertiesFile = rootProject.file("key.properties")
-            if (keyPropertiesFile.exists()) {
-                keyProperties.load(FileInputStream(keyPropertiesFile))
-            }
-
-            storeFile = file(keyProperties.getProperty("storeFile", "upload-keystore.jks"))
-            storePassword = keyProperties.getProperty("storePassword")
-            keyAlias = keyProperties.getProperty("keyAlias")
-            keyPassword = keyProperties.getProperty("keyPassword")
-        }
-    }
-
     buildTypes {
         release {
-            signingConfig = signingConfigs.getByName("release")
             // TODO: Add your own signing config for the release build.
             // Signing with the debug keys for now, so `flutter run --release` works.
-            //signingConfig = signingConfigs.getByName("debug")
+            signingConfig = signingConfigs.getByName("debug")
         }
     }
 }
 
 dependencies {
-  implementation(platform("com.google.firebase:firebase-bom:34.2.0"))
-  implementation("com.google.firebase:firebase-analytics")
     coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.1.4")
 }
 
 flutter {
     source = "../.."
 }
+
+apply(plugin = "com.google.gms.google-services")
