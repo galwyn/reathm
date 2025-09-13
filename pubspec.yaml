@@ -1,7 +1,7 @@
 name: reathm
 description: "A daily companion app for motivation and encouragement."
 publish_to: 'none'
-version: 0.0.1+4
+version: 0.0.1+16
 
 environment:
   sdk: ^3.8.0

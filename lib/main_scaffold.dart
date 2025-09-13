@@ -127,22 +127,22 @@ class _MainScaffoldState extends State<MainScaffold> {
                 ),
               ),
               const PopupMenuDivider(),
-              const PopupMenuItem<String>(
+              PopupMenuItem<String>(
                 value: 'deleteAccount',
                 child: Row(
                   children: [
                     Icon(Icons.delete, color: context.colors.error),
-                    SizedBox(width: 8),
+                    const SizedBox(width: 8),
                     Text('Delete Account', style: TextStyle(color: context.colors.error)),
                   ],
                 ),
               ),
-              const PopupMenuItem<String>(
+              PopupMenuItem<String>(
                 value: 'signOut',
                 child: Row(
                   children: [
                     Icon(Icons.logout, color: context.colors.error),
-                    SizedBox(width: 8),
+                    const SizedBox(width: 8),
                     Text('Sign Out', style: TextStyle(color: context.colors.error)),
                   ],
                 ),

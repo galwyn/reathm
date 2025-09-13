@@ -57,7 +57,7 @@ class ReflectionTimerCard extends StatelessWidget {
                 const SizedBox(width: 10),
                 ElevatedButton(
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: isTimerRunning ? Colors.redAccent : colorScheme.primary,
+                    backgroundColor: isTimerRunning ? Colors.redAccent : context.colors.primary,
                   ),
                   onPressed: onStartStopPressed,
                   child: Text(isTimerRunning ? 'Stop' : 'Start'),

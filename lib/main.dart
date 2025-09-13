@@ -51,13 +51,13 @@ class ReathmApp extends StatelessWidget {
           bodyMedium: TextStyle(fontSize: 14.0),
           bodySmall: TextStyle(fontSize: 12.0, color: Colors.grey),
         ),
-        cardTheme: CardTheme(
+        cardTheme: CardThemeData(
           elevation: 4.0,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(12.0),
           ),
         ),
-        dialogTheme: DialogTheme(
+        dialogTheme: DialogThemeData(
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(12.0),
           ),
