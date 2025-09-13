@@ -6,6 +6,7 @@ import 'auth_service.dart';
 import 'activity_calendar_page.dart';
 import 'cloud_function_service.dart';
 import 'package:reathm/theme/theme_extensions.dart';
+import 'package:reathm/about_page.dart';
 
 class MainScaffold extends StatefulWidget {
   final User user;
@@ -75,6 +76,10 @@ class _MainScaffoldState extends State<MainScaffold> {
                 } catch (e) {
                   print("Error signing out: $e");
                 }
+              } else if (value == 'about') {
+                Navigator.of(context).push(
+                  MaterialPageRoute(builder: (context) => const AboutPage()),
+                );
               } else if (value == 'deleteAccount') {
                 showDialog(
                   context: context,
@@ -127,6 +132,16 @@ class _MainScaffoldState extends State<MainScaffold> {
                 ),
               ),
               const PopupMenuDivider(),
+              PopupMenuItem<String>(
+                value: 'about',
+                child: Row(
+                  children: [
+                    Icon(Icons.info, color: context.colors.onSurface),
+                    const SizedBox(width: 8),
+                    Text('About', style: TextStyle(color: context.colors.onSurface)),
+                  ],
+                ),
+              ),
               PopupMenuItem<String>(
                 value: 'deleteAccount',
                 child: Row(
