@@ -38,14 +38,11 @@ void main(List<String> arguments) {
       major++;
       minor = 0;
       patch = 0;
-      break;
     case 'minor':
       minor++;
       patch = 0;
-      break;
     case 'patch':
       patch++;
-      break;
   }
 
   final String newSemVer = '$major.$minor.$patch';

@@ -2,12 +2,9 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'auth_service.dart';
 import 'firebase_options.dart';
-import 'home_page.dart';
 import 'login_page.dart';
 import 'main_scaffold.dart';
-import 'notification_service.dart';
 import 'seed_data.dart';
 
 void main() async {
@@ -55,7 +52,7 @@ class ReathmApp extends StatelessWidget {
 class MainScreen extends StatelessWidget {
   final User user;
 
-  const MainScreen({Key? key, required this.user}) : super(key: key);
+  const MainScreen({super.key, required this.user});
 
   @override
   Widget build(BuildContext context) {

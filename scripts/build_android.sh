@@ -1,6 +1,14 @@
 #!/bin/bash
 
-echo "Building Android App Bundle for release..."
+# Default build type
+BUILD_TYPE="appbundle"
+
+# Check for argument to override build type
+if [ "$1" == "apk" ]; then
+    BUILD_TYPE="apk"
+fi
+
+echo "Building Android $BUILD_TYPE for release..."
 
 # Ensure Flutter is available
 if ! command -v flutter &> /dev/null
@@ -19,16 +27,21 @@ flutter clean
 # Get Flutter dependencies
 flutter pub get
 
-# Build the app bundle
-# This command automatically uses the signing configuration from android/key.properties
-# and the keystore file specified within it (e.g., android/app/upload-keystore.jks).
-# Ensure these files are present and correctly configured for a release build.
-flutter build appbundle --release
+# Build the app bundle or apk
+if [ "$BUILD_TYPE" == "appbundle" ]; then
+    flutter build appbundle --release
+else
+    flutter build apk --release
+fi
 
 if [ $? -eq 0 ]; then
-    echo "Android App Bundle built successfully!"
-    echo "You can find the AAB file in: build/app/outputs/bundle/release/"
+    echo "Android $BUILD_TYPE built successfully!"
+    if [ "$BUILD_TYPE" == "appbundle" ]; then
+        echo "You can find the AAB file in: build/app/outputs/bundle/release/"
+    else
+        echo "You can find the APK file in: build/app/outputs/flutter-apk/"
+    fi
 else
-    echo "Android App Bundle build failed."
+    echo "Android $BUILD_TPE build failed."
     exit 1
 fi

@@ -6,7 +6,7 @@ import 'firestore_service.dart';
 class HistoryPage extends StatefulWidget {
   final User user;
 
-  const HistoryPage({Key? key, required this.user}) : super(key: key);
+  const HistoryPage({super.key, required this.user});
 
   @override
   State<HistoryPage> createState() => _HistoryPageState();

@@ -1,48 +1,60 @@
 import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:reathm/models/activity.dart';
+import 'package:uuid/uuid.dart';
+import 'firestore_service.dart';
 
 class ManageActivitiesPage extends StatefulWidget {
-  final Map<String, bool> dailyActivities;
+  final List<Activity> dailyActivities;
+  final User user;
 
-  const ManageActivitiesPage({Key? key, required this.dailyActivities}) : super(key: key);
+  const ManageActivitiesPage({super.key, required this.dailyActivities, required this.user});
 
   @override
   State<ManageActivitiesPage> createState() => _ManageActivitiesPageState();
 }
 
 class _ManageActivitiesPageState extends State<ManageActivitiesPage> {
-  late Map<String, bool> _dailyActivities;
+  late List<Activity> _dailyActivities;
+  final Uuid _uuid = const Uuid();
+  final FirestoreService _firestoreService = FirestoreService();
 
   @override
   void initState() {
     super.initState();
-    _dailyActivities = Map.from(widget.dailyActivities);
+    _dailyActivities = List.from(widget.dailyActivities);
   }
 
   @override
   Widget build(BuildContext context) {
-    return WillPopScope(
-      onWillPop: () async {
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, result) {
+        if (didPop) {
+          return;
+        }
         Navigator.pop(context, _dailyActivities);
-        return true;
       },
       child: Scaffold(
         appBar: AppBar(
-          title: Text('Manage Activities'),
+          title: const Text('Manage Activities'),
         ),
-        body: ListView(
-          children: _dailyActivities.keys.map((activity) {
-            return ListTile(
-              title: Text(activity),
-              trailing: IconButton(
-                icon: Icon(Icons.delete),
-                onPressed: () {
-                  setState(() {
-                    _dailyActivities.remove(activity);
-                  });
-                },
-              ),
+        body: ListView.builder(
+          itemCount: _dailyActivities.length,
+          itemBuilder: (context, index) {
+            final activity = _dailyActivities[index];
+            return SwitchListTile(
+              title: Text(activity.name),
+              value: activity.isActive,
+              onChanged: (bool value) {
+                setState(() {
+                  final updatedActivity = activity.copyWith(isActive: value);
+                  _dailyActivities[index] = updatedActivity;
+                  _firestoreService.updateDailyActivity(widget.user.uid, updatedActivity);
+                });
+              },
             );
-          }).toList(),
+          },
         ),
         floatingActionButton: FloatingActionButton(
           onPressed: () {
@@ -51,33 +63,41 @@ class _ManageActivitiesPageState extends State<ManageActivitiesPage> {
               builder: (context) {
                 final TextEditingController controller = TextEditingController();
                 return AlertDialog(
-                  title: Text('Add Activity'),
+                  title: const Text('Add Activity'),
                   content: TextField(
                     controller: controller,
-                    decoration: InputDecoration(hintText: 'Activity Name'),
+                    decoration: const InputDecoration(hintText: 'Activity Name'),
                   ),
                   actions: [
                     TextButton(
                       onPressed: () {
                         Navigator.pop(context);
                       },
-                      child: Text('Cancel'),
+                      child: const Text('Cancel'),
                     ),
                     TextButton(
                       onPressed: () {
-                        setState(() {
-                          _dailyActivities[controller.text] = false;
-                        });
+                        if (controller.text.isNotEmpty) {
+                          setState(() {
+                            final newActivity = Activity(
+                              id: _uuid.v4(),
+                              name: controller.text,
+                              emoji: '📝', // Default emoji
+                            );
+                            _dailyActivities.add(newActivity);
+                            _firestoreService.addDailyActivity(widget.user.uid, newActivity);
+                          });
+                        }
                         Navigator.pop(context);
                       },
-                      child: Text('Add'),
+                      child: const Text('Add'),
                     ),
                   ],
                 );
               },
             );
           },
-          child: Icon(Icons.add),
+          child: const Icon(Icons.add),
         ),
       ),
     );

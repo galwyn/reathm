@@ -1,7 +1,7 @@
-
 import 'package:flutter_test/flutter_test.dart';
 import 'package:fake_cloud_firestore/fake_cloud_firestore.dart';
 import 'package:firebase_auth_mocks/firebase_auth_mocks.dart';
+import 'package:reathm/models/activity.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:reathm/firestore_service.dart';
 import 'package:firebase_core/firebase_core.dart';
@@ -17,11 +17,9 @@ void main() {
   group('FirestoreService', () {
     late FakeFirebaseFirestore firestore;
     late FirestoreService service;
-    late MockFirebaseAuth auth;
 
     setUp(() {
       firestore = FakeFirebaseFirestore();
-      auth = MockFirebaseAuth();
       service = FirestoreService(db: firestore);
     });
 
@@ -40,79 +38,123 @@ void main() {
 
         final doc = await firestore.collection('users').doc(user.uid).get();
         expect(doc.exists, isTrue);
-        expect(doc.data(), {
-          'email': 'test@example.com',
-          'displayName': 'Test User',
-          'photoURL': 'https://example.com/photo.jpg',
-        });
+        final data = doc.data();
+        expect(data, isNotNull);
+        expect(data!['email'], 'test@example.com');
+        expect(data['displayName'], 'Test User');
+        expect(data['photoURL'], 'https://example.com/photo.jpg');
+        expect(data['lastLogin'], isA<Timestamp>());
       });
     });
 
     group('saveDailyActivities', () {
       test('should save daily activities for a user', () async {
         const uid = 'test_uid';
-        final activities = {'activity1': true, 'activity2': false};
+        final activities = [
+          const Activity(id: 'activity1', name: 'Activity 1', emoji: 'ðŸ”¥', isActive: true),
+          const Activity(id: 'activity2', name: 'Activity 2', emoji: 'ðŸ’ª', isActive: false),
+        ];
         await service.saveDailyActivities(uid, activities);
 
-        final doc = await firestore.collection('user_activities').doc(uid).get();
+        final doc = await firestore.collection('users').doc(uid).get();
         expect(doc.exists, isTrue);
-        expect(doc.data(), {'activities': activities});
+        final expectedActivities = {
+          'activity1': {
+            'id': 'activity1',
+            'name': 'Activity 1',
+            'emoji': 'ðŸ”¥',
+            'isActive': true,
+          },
+          'activity2': {
+            'id': 'activity2',
+            'name': 'Activity 2',
+            'emoji': 'ðŸ’ª',
+            'isActive': false,
+          },
+        };
+        expect(doc.data()!['daily_activities'], expectedActivities);
       });
     });
 
-    group('getDailyActivities', () {
-      test('should retrieve daily activities for a user', () async {
+    group('getActiveActivities', () {
+      test('should retrieve only active daily activities for a user', () async {
         const uid = 'test_uid';
-        final activities = {'activity1': true, 'activity2': false};
-        await firestore.collection('user_activities').doc(uid).set({'activities': activities});
+        final activities = {
+          'activity1': {
+            'id': 'activity1',
+            'name': 'Activity 1',
+            'emoji': 'ðŸ”¥',
+            'isActive': true,
+          },
+          'activity2': {
+            'id': 'activity2',
+            'name': 'Activity 2',
+            'emoji': 'ðŸ’ª',
+            'isActive': false,
+          },
+        };
+        await firestore.collection('users').doc(uid).set({'daily_activities': activities});
 
-        final fetchedActivities = await service.getDailyActivities(uid);
-        expect(fetchedActivities, activities);
+        final fetchedActivities = await service.getActiveActivities(uid);
+        expect(fetchedActivities.length, 1);
+        expect(fetchedActivities[0].id, 'activity1');
       });
 
-      test('should return empty map if no activities exist', () async {
+      test('should return empty list if no activities exist', () async {
         const uid = 'non_existent_uid';
-        final fetchedActivities = await service.getDailyActivities(uid);
+        final fetchedActivities = await service.getActiveActivities(uid);
         expect(fetchedActivities, isEmpty);
       });
     });
 
-    group('addAccomplishment', () {
-      test('should add an accomplishment for a user', () async {
+    group('setActivityCompletedStatus', () {
+      test('should add an accomplishment when completed is true', () async {
         const uid = 'test_uid';
-        const activity = 'Completed task';
-        await service.addAccomplishment(uid, activity);
+        const activityName = 'Completed task';
+        await service.setActivityCompletedStatus(uid, activityName, true);
 
         final query = await firestore.collection('users').doc(uid).collection('accomplishments').get();
         expect(query.docs.length, 1);
-        expect((query.docs.first.data() as Map<String, dynamic>)['activity'], activity); // Cast data()
-        expect((query.docs.first.data() as Map<String, dynamic>)['timestamp'], isA<Timestamp>()); // Cast data()
+        expect(query.docs.first.data()['activity'], activityName);
+      });
+
+      test('should remove an accomplishment when completed is false', () async {
+        const uid = 'test_uid';
+        const activityName = 'Completed task';
+        await firestore.collection('users').doc(uid).collection('accomplishments').add({
+          'activity': activityName,
+          'timestamp': Timestamp.now(),
+        });
+
+        await service.setActivityCompletedStatus(uid, activityName, false);
+
+        final query = await firestore.collection('users').doc(uid).collection('accomplishments').get();
+        expect(query.docs.isEmpty, isTrue);
       });
     });
 
-    group('getAccomplishments', () {
-      test('should retrieve accomplishments for a user', () async {
+    group('getAllAccomplishments', () {
+      test('should retrieve all accomplishments for a user', () async {
         const uid = 'test_uid';
         await firestore.collection('users').doc(uid).collection('accomplishments').add({
           'activity': 'Task 1',
-          'timestamp': FieldValue.serverTimestamp(),
+          'timestamp': Timestamp.fromDate(DateTime(2023, 1, 1)),
         });
         await firestore.collection('users').doc(uid).collection('accomplishments').add({
           'activity': 'Task 2',
-          'timestamp': FieldValue.serverTimestamp(),
+          'timestamp': Timestamp.fromDate(DateTime(2023, 1, 2)),
         });
 
-        final snapshot = await service.getAccomplishments(uid);
-        final accomplishments = snapshot.docs;
-        accomplishments.sort((a, b) => (b.data() as Map<String, dynamic>)['timestamp'].compareTo((a.data() as Map<String, dynamic>)['timestamp']));
+        final accomplishments = await service.getAllAccomplishments(uid);
         expect(accomplishments.length, 2);
-        expect((accomplishments.first.data() as Map<String, dynamic>)['activity'], 'Task 2'); // Ordered by descending timestamp, cast data()
+        expect(accomplishments[0]['activity'], 'Task 2');
+        expect(accomplishments[1]['activity'], 'Task 1');
       });
 
-      test('should return empty snapshot if no accomplishments exist', () async {
+      test('should return empty list if no accomplishments exist', () async {
         const uid = 'non_existent_uid';
-        final snapshot = await service.getAccomplishments(uid);
-        expect(snapshot.docs, isEmpty);
+        final accomplishments = await service.getAllAccomplishments(uid);
+        expect(accomplishments, isEmpty);
       });
     });
 
@@ -125,9 +167,9 @@ void main() {
 
         final query = await firestore.collection('users').doc(uid).collection('affirmation_feedback').get();
         expect(query.docs.length, 1);
-        expect((query.docs.first.data() as Map<String, dynamic>)['affirmation'], affirmation); // Cast data()
-        expect((query.docs.first.data() as Map<String, dynamic>)['liked'], liked); // Cast data()
-        expect((query.docs.first.data() as Map<String, dynamic>)['timestamp'], isA<Timestamp>()); // Cast data()
+        expect(query.docs.first.data()['affirmation'], affirmation);
+        expect(query.docs.first.data()['liked'], liked);
+        expect(query.docs.first.data()['timestamp'], isA<Timestamp>());
       });
     });
 

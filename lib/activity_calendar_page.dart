@@ -6,7 +6,7 @@ import 'firestore_service.dart';
 class ActivityCalendarPage extends StatefulWidget {
   final User user;
 
-  const ActivityCalendarPage({Key? key, required this.user}) : super(key: key);
+  const ActivityCalendarPage({super.key, required this.user});
 
   @override
   State<ActivityCalendarPage> createState() => _ActivityCalendarPageState();
@@ -23,6 +23,7 @@ class _ActivityCalendarPageState extends State<ActivityCalendarPage> {
   }
 
   Future<void> _showActivityCalendar(String activityName) async {
+    if (!mounted) return;
     final history = await _firestoreService.getActivityHistory(widget.user.uid, activityName);
     final events = { for (var item in history) DateTime.utc(item.year, item.month, item.day) : 'Completed' };
 

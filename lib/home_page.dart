@@ -3,31 +3,36 @@ import 'dart:async';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'cloud_function_service.dart';
-import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'notification_service.dart';
-import 'package:timezone/timezone.dart' as tz;
 import 'manage_activities_page.dart';
 import 'package:timezone/data/latest.dart' as tzdata;
+import 'package:reathm/models/activity.dart';
 import 'firestore_service.dart';
 
 class HomePage extends StatefulWidget {
   final User user;
+  final FirestoreService? firestoreService;
+  final CloudFunctionService? cloudFunctionService;
+  final NotificationService? notificationService;
 
-  const HomePage({Key? key, required this.user}) : super(key: key);
+  const HomePage({
+    super.key,
+    required this.user,
+    this.firestoreService,
+    this.cloudFunctionService,
+    this.notificationService,
+  });
 
   @override
   State<HomePage> createState() => _HomePageState();
 }
 
 class _HomePageState extends State<HomePage> {
-  final CloudFunctionService _cloudFunctionService = CloudFunctionService();
-  final NotificationService _notificationService = NotificationService();
-  final FirestoreService _firestoreService = FirestoreService();
+  late final CloudFunctionService _cloudFunctionService;
+  late final FirestoreService _firestoreService;
   String _affirmation = 'Loading affirmation...';
-  Map<String, bool> _dailyActivities = {};
-
-  int _selectedHour = 8; // Default reminder hour
-  int _selectedMinute = 0; // Default reminder minute
+  List<Activity> _dailyActivities = [];
+  List<String> _todaysAccomplishments = [];
 
   double _timerDuration = 5.0;
   Timer? _timer;
@@ -37,13 +42,20 @@ class _HomePageState extends State<HomePage> {
   @override
   void initState() {
     super.initState();
+    _firestoreService = widget.firestoreService ?? FirestoreService();
+    _cloudFunctionService = widget.cloudFunctionService ?? CloudFunctionService();
     tzdata.initializeTimeZones();
-    _getInitialAffirmation(); // Call the new method for initial load
+    _getInitialAffirmation();
+    _loadActivities();
     _remainingSeconds = (_timerDuration * 60).toInt();
-    _firestoreService.getDailyActivities(widget.user.uid).then((activities) {
-      setState(() {
-        _dailyActivities = activities;
-      });
+  }
+
+  Future<void> _loadActivities() async {
+    final activities = await _firestoreService.getActiveActivities(widget.user.uid);
+    final accomplishments = await _firestoreService.getAccomplishmentsForDay(widget.user.uid, DateTime.now());
+    setState(() {
+      _dailyActivities = activities;
+      _todaysAccomplishments = accomplishments;
     });
   }
 
@@ -84,7 +96,6 @@ class _HomePageState extends State<HomePage> {
   }
 
   Future<void> _getInitialAffirmation() async {
-    // Try to get a random seeded affirmation first
     final seededAffirmation = await _firestoreService.getRandomSeededAffirmation();
     if (seededAffirmation != null) {
       setState(() {
@@ -92,8 +103,6 @@ class _HomePageState extends State<HomePage> {
       });
       return;
     }
-
-    // If no seeded affirmations, generate an AI affirmation
     await _generateNewAffirmationFromAI();
   }
 
@@ -113,43 +122,6 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  Future<void> _scheduleDailyReminder() async {
-    final now = tz.TZDateTime.now(tz.local);
-    var scheduledDate = tz.TZDateTime(
-      tz.local,
-      now.year,
-      now.month,
-      now.day,
-      _selectedHour,
-      _selectedMinute,
-    );
-
-    if (scheduledDate.isBefore(now)) {
-      scheduledDate = scheduledDate.add(const Duration(days: 1));
-    }
-
-    await _notificationService.flutterLocalNotificationsPlugin.zonedSchedule(
-      0,
-      'Reathm Reminder',
-      'Time for your daily affirmation and activities!',
-      scheduledDate,
-      const NotificationDetails(
-        android: AndroidNotificationDetails(
-          'daily_reminder_channel',
-          'Daily Reminder',
-          channelDescription: 'Daily reminder for Reathm app',
-          importance: Importance.max,
-          priority: Priority.high,
-        ),
-        iOS: DarwinNotificationDetails(),
-      ),
-      androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
-      matchDateTimeComponents: DateTimeComponents.time,
-    );
-
-    _showEncouragement('Daily reminder set for $_selectedHour:$_selectedMinute');
-  }
-
   Future<void> _saveAffirmationFeedback(bool liked) async {
     await _firestoreService.addAffirmationFeedback(
       widget.user.uid,
@@ -158,15 +130,16 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
+  @override
   Widget build(BuildContext context) {
     final ColorScheme colorScheme = Theme.of(context).colorScheme.copyWith(
       primary: Colors.deepPurple.shade300,
       secondary: Colors.orange.shade300,
-      background: Colors.grey.shade100,
+      surface: Colors.grey.shade100,
     );
 
     return Scaffold(
-      backgroundColor: colorScheme.background,
+      backgroundColor: colorScheme.surface,
       body: Center(
         child: ConstrainedBox(
           constraints: const BoxConstraints(maxWidth: 600),
@@ -176,15 +149,10 @@ class _HomePageState extends State<HomePage> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  // Affirmation Section
                   _buildAffirmationSection(colorScheme),
                   const SizedBox(height: 20),
-
-                  // Main Content Grid
                   _buildMainGrid(colorScheme),
                   const SizedBox(height: 20),
-
-                  // Daily Activities Section
                   _buildDailyActivitiesSection(colorScheme),
                 ],
               ),
@@ -203,7 +171,7 @@ class _HomePageState extends State<HomePage> {
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.grey.withOpacity(0.2),
+            color: Colors.grey.withAlpha(51),
             spreadRadius: 2,
             blurRadius: 8,
             offset: const Offset(0, 4),
@@ -271,7 +239,7 @@ class _HomePageState extends State<HomePage> {
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.grey.withOpacity(0.2),
+            color: Colors.grey.withAlpha(51),
             spreadRadius: 2,
             blurRadius: 8,
             offset: const Offset(0, 4),
@@ -342,7 +310,7 @@ class _HomePageState extends State<HomePage> {
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.grey.withOpacity(0.2),
+            color: Colors.grey.withAlpha(51),
             spreadRadius: 2,
             blurRadius: 8,
             offset: const Offset(0, 4),
@@ -369,42 +337,43 @@ class _HomePageState extends State<HomePage> {
                   ),
                 ),
                 onPressed: () async {
-                  final updatedActivities = await Navigator.push(
+                  await Navigator.push<List<Activity>>(
                     context,
                     MaterialPageRoute(
-                      builder: (context) => ManageActivitiesPage(dailyActivities: _dailyActivities),
+                      builder: (context) => ManageActivitiesPage(dailyActivities: _dailyActivities, user: widget.user),
                     ),
                   );
-                  if (updatedActivities != null) {
-                    setState(() {
-                      _dailyActivities = updatedActivities;
-                    });
-                    await _firestoreService.saveDailyActivities(widget.user.uid, _dailyActivities);
-                  }
+                  _loadActivities();
                 },
                 child: const Text('Manage'),
               ),
             ],
           ),
           const SizedBox(height: 10),
-          ..._dailyActivities.keys.map((activity) {
+          ..._dailyActivities.map((activity) {
+            final isCompleted = _todaysAccomplishments.contains(activity.name);
             return CheckboxListTile(
-              title: Text(activity),
-              value: _dailyActivities[activity],
+              title: Text(activity.name),
+              value: isCompleted,
               onChanged: (newValue) async {
-                setState(() {
-                  _dailyActivities[activity] = newValue!;
-                });
-                await _firestoreService.saveDailyActivities(widget.user.uid, _dailyActivities);
-                if (newValue == true) {
-                  await _firestoreService.addAccomplishment(widget.user.uid, activity);
-                  final encouragement = await _cloudFunctionService.generateEncouragement(activity);
-                  _showEncouragement(encouragement);
+                if (newValue != null) {
+                  await _firestoreService.setActivityCompletedStatus(widget.user.uid, activity.name, newValue);
+                  setState(() {
+                    if (newValue) {
+                      _todaysAccomplishments.add(activity.name);
+                    } else {
+                      _todaysAccomplishments.remove(activity.name);
+                    }
+                  });
+                  if (newValue == true) {
+                    final encouragement = await _cloudFunctionService.generateEncouragement(activity.name);
+                    _showEncouragement(encouragement);
+                  }
                 }
               },
               activeColor: colorScheme.primary,
             );
-          }).toList(),
+          }),
         ],
       ),
     );

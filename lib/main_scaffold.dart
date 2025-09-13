@@ -9,7 +9,7 @@ import 'cloud_function_service.dart';
 class MainScaffold extends StatefulWidget {
   final User user;
 
-  const MainScaffold({Key? key, required this.user}) : super(key: key);
+  const MainScaffold({super.key, required this.user});
 
   @override
   State<MainScaffold> createState() => _MainScaffoldState();
@@ -42,10 +42,8 @@ class _MainScaffoldState extends State<MainScaffold> {
     switch (_selectedIndex) {
       case 1:
         title = 'History';
-        break;
       case 2:
         title = 'Activity Calendar';
-        break;
       default:
         title = 'Reathm';
     }
@@ -67,6 +65,7 @@ class _MainScaffoldState extends State<MainScaffold> {
                   : null,
             ),
             onSelected: (value) async {
+              if (!mounted) return;
               if (value == 'signOut') {
                 try {
                   await AuthService.googleSignIn.disconnect();

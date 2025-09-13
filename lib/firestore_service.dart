@@ -1,29 +1,78 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'dart:math';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:reathm/models/activity.dart';
 
 class FirestoreService {
-  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  final FirebaseFirestore _firestore;
 
-  Future<Map<String, bool>> getDailyActivities(String userId) async {
+  FirestoreService({FirebaseFirestore? db}) : _firestore = db ?? FirebaseFirestore.instance;
+
+  Future<List<Activity>> getActiveActivities(String userId) async {
     final doc = await _firestore.collection('users').doc(userId).get();
     if (doc.exists && doc.data()!.containsKey('daily_activities')) {
-      return Map<String, bool>.from(doc.data()!['daily_activities']);
+      final Map<String, dynamic> activitiesMap = Map<String, dynamic>.from(doc.data()!['daily_activities']);
+      return activitiesMap.entries
+          .map((entry) => Activity.fromMap(Map<String, dynamic>.from(entry.value)))
+          .where((activity) => activity.isActive)
+          .toList();
     }
-    return {};
+    return [];
   }
 
-  Future<void> saveDailyActivities(String userId, Map<String, bool> activities) async {
+  Future<void> saveDailyActivities(String userId, List<Activity> activities) async {
+    final Map<String, Map<String, dynamic>> activitiesToSave = {};
+    for (var activity in activities) {
+      activitiesToSave[activity.id] = activity.toMap();
+    }
     await _firestore.collection('users').doc(userId).set({
-      'daily_activities': activities,
+      'daily_activities': activitiesToSave,
     }, SetOptions(merge: true));
   }
 
-  Future<void> addAccomplishment(String userId, String activity) async {
-    await _firestore.collection('users').doc(userId).collection('accomplishments').add({
-      'activity': activity,
-      'timestamp': FieldValue.serverTimestamp(),
+  Future<void> addDailyActivity(String userId, Activity activity) async {
+    await _firestore.collection('users').doc(userId).set({
+      'daily_activities': {
+        activity.id: activity.toMap(),
+      },
+    }, SetOptions(merge: true));
+  }
+
+  Future<void> updateDailyActivity(String userId, Activity activity) async {
+    await _firestore.collection('users').doc(userId).set({
+      'daily_activities': {
+        activity.id: activity.toMap(),
+      },
+    }, SetOptions(merge: true));
+  }
+
+  Future<void> deleteDailyActivity(String userId, String activityId) async {
+    await _firestore.collection('users').doc(userId).update({
+      'daily_activities.$activityId': FieldValue.delete(),
     });
+  }
+
+  Future<void> setActivityCompletedStatus(String userId, String activityName, bool isCompleted) async {
+    final now = DateTime.now();
+    final startOfDay = DateTime(now.year, now.month, now.day);
+
+    if (isCompleted) {
+      await _firestore.collection('users').doc(userId).collection('accomplishments').add({
+        'activity': activityName,
+        'timestamp': FieldValue.serverTimestamp(),
+      });
+    } else {
+      final query = await _firestore
+          .collection('users')
+          .doc(userId)
+          .collection('accomplishments')
+          .where('activity', isEqualTo: activityName)
+          .where('timestamp', isGreaterThanOrEqualTo: startOfDay)
+          .get();
+      for (final doc in query.docs) {
+        await doc.reference.delete();
+      }
+    }
   }
 
   Future<List<String>> getAccomplishedActivities(String userId) async {
@@ -97,6 +146,7 @@ class FirestoreService {
     await _firestore.collection('users').doc(user.uid).set({
       'email': user.email,
       'displayName': user.displayName,
+      'photoURL': user.photoURL,
       'lastLogin': FieldValue.serverTimestamp(),
     }, SetOptions(merge: true));
   }
