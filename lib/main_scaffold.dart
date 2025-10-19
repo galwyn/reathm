@@ -6,6 +6,7 @@ import 'auth_service.dart';
 import 'activity_calendar_page.dart';
 import 'cloud_function_service.dart';
 import 'package:reathm/theme/theme_extensions.dart';
+import 'package:package_info_plus/package_info_plus.dart';
 
 class MainScaffold extends StatefulWidget {
   final User user;
@@ -15,8 +16,6 @@ class MainScaffold extends StatefulWidget {
   @override
   State<MainScaffold> createState() => _MainScaffoldState();
 }
-
-import 'package:package_info_plus/package_info_plus.dart';
 
 class _MainScaffoldState extends State<MainScaffold> {
   int _selectedIndex = 0;
