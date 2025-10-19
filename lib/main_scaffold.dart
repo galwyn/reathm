@@ -16,20 +16,37 @@ class MainScaffold extends StatefulWidget {
   State<MainScaffold> createState() => _MainScaffoldState();
 }
 
+import 'package:package_info_plus/package_info_plus.dart';
+
 class _MainScaffoldState extends State<MainScaffold> {
   int _selectedIndex = 0;
   final CloudFunctionService _cloudFunctionService = CloudFunctionService();
 
   late final List<Widget> _pages;
 
+  PackageInfo _packageInfo = PackageInfo(
+    appName: 'Unknown',
+    packageName: 'Unknown',
+    version: 'Unknown',
+    buildNumber: 'Unknown',
+  );
+
   @override
   void initState() {
     super.initState();
+    _initPackageInfo();
     _pages = [
       HomePage(user: widget.user),
       HistoryPage(user: widget.user),
       ActivityCalendarPage(user: widget.user),
     ];
+  }
+
+  Future<void> _initPackageInfo() async {
+    final info = await PackageInfo.fromPlatform();
+    setState(() {
+      _packageInfo = info;
+    });
   }
 
   void _onItemTapped(int index) {
@@ -75,6 +92,25 @@ class _MainScaffoldState extends State<MainScaffold> {
                 } catch (e) {
                   print("Error signing out: $e");
                 }
+              } else if (value == 'showVersion') {
+                showDialog(
+                  context: context,
+                  builder: (BuildContext context) {
+                    return AlertDialog(
+                      title: const Text('App Version'),
+                      content: Text(
+                          'Version: ${_packageInfo.version}+${_packageInfo.buildNumber}'),
+                      actions: <Widget>[
+                        TextButton(
+                          child: const Text('Close'),
+                          onPressed: () {
+                            Navigator.of(context).pop();
+                          },
+                        ),
+                      ],
+                    );
+                  },
+                );
               } else if (value == 'deleteAccount') {
                 showDialog(
                   context: context,
@@ -127,6 +163,16 @@ class _MainScaffoldState extends State<MainScaffold> {
                 ),
               ),
               const PopupMenuDivider(),
+              PopupMenuItem<String>(
+                value: 'showVersion',
+                child: Row(
+                  children: [
+                    Icon(Icons.info_outline, color: context.colors.onSurface),
+                    const SizedBox(width: 8),
+                    Text('Version', style: TextStyle(color: context.colors.onSurface)),
+                  ],
+                ),
+              ),
               PopupMenuItem<String>(
                 value: 'deleteAccount',
                 child: Row(

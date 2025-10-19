@@ -106,7 +106,7 @@ class _LoginPageState extends State<LoginPage> {
                   ),
             const SizedBox(height: 20), // Add some spacing
             Text(
-              'Version: ${_packageInfo.version}',
+              'Version: ${_packageInfo.version}+${_packageInfo.buildNumber}',
               style: Theme.of(context).textTheme.bodySmall,
             ),
           ],
