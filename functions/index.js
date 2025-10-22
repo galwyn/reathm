@@ -128,7 +128,7 @@ exports.deleteUserAccount = onCall(async (request) => {
     return {success: true};
   } catch (error) {
     logger.error(`Error deleting user ${uid}:`, error);
-    throw new functions.httpsError(
+    throw new functions.HttpsError(
         "internal",
         "Error deleting user account.",
     );
