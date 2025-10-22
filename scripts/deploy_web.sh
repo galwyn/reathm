@@ -33,7 +33,7 @@ if [ $? -eq 0 ]; then
     echo "Flutter web build successful. Deploying to Firebase Hosting..."
     # Deploy to Firebase Hosting
     # Assumes you are already logged in to Firebase CLI and have selected the correct project
-    firebase deploy --only hosting
+    firebase deploy
 
     if [ $? -eq 0 ]; then
         echo "Web application deployed successfully!"
