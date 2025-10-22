@@ -104,15 +104,22 @@ class _HomePageState extends State<HomePage> {
   }
 
   Future<void> _generateNewAffirmationFromAI() async {
-    final newAffirmation = await _cloudFunctionService.generateNewAffirmation(_affirmation);
-    setState(() {
-      _affirmation = newAffirmation;
-    });
-    await _firestoreService.addAffirmationFeedback(
-      widget.user.uid,
-      _affirmation,
-      false,
-    );
+    try {
+      final newAffirmation = await _cloudFunctionService.generateNewAffirmation(_affirmation);
+      setState(() {
+        _affirmation = newAffirmation;
+      });
+      await _firestoreService.addAffirmationFeedback(
+        widget.user.uid,
+        _affirmation,
+        false,
+      );
+    } catch (e) {
+      setState(() {
+        _affirmation = 'Error: Could not generate new affirmation. Please try again.';
+      });
+      print('Error in _generateNewAffirmationFromAI: $e');
+    }
   }
 
   Future<void> _saveAffirmationFeedback(bool liked) async {

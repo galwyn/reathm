@@ -32,7 +32,7 @@ class CloudFunctionService {
       return result.data['affirmation'];
     } catch (e) {
       print('Error calling generateNewAffirmation: $e');
-      return 'Error generating new affirmation.';
+      rethrow;
     }
   }
 
