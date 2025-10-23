@@ -39,9 +39,9 @@ class Activity {
 
   factory Activity.fromMap(Map<String, dynamic> map) {
     return Activity(
-      id: map['id'] as String,
-      name: map['name'] as String,
-      emoji: map['emoji'] as String,
+      id: map['id']?.toString() ?? '',
+      name: map['name']?.toString() ?? 'Unnamed Activity',
+      emoji: map['emoji']?.toString() ?? '📝',
       isActive: map['isActive'] as bool? ?? true,
     );
   }
