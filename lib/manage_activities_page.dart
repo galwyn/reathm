@@ -25,6 +25,18 @@ class _ManageActivitiesPageState extends State<ManageActivitiesPage> {
     _dailyActivities = List.from(widget.dailyActivities);
   }
 
+  void _addActivity(String name) {
+    setState(() {
+      final newActivity = Activity(
+        id: _uuid.v4(),
+        name: name,
+        emoji: '📝', // Default emoji
+      );
+      _dailyActivities.add(newActivity);
+      _firestoreService.addDailyActivity(widget.user.uid, newActivity);
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return PopScope(
@@ -57,53 +69,83 @@ class _ManageActivitiesPageState extends State<ManageActivitiesPage> {
           },
         ),
         floatingActionButton: FloatingActionButton(
-          onPressed: () {
-            showDialog(
+          onPressed: () async {
+            final newActivityName = await showDialog<String>(
               context: context,
               builder: (context) {
-                final TextEditingController controller = TextEditingController();
-                return AlertDialog(
-                  title: const Text('Add Activity'),
-                  content: TextField(
-                    controller: controller,
-                    decoration: const InputDecoration(hintText: 'Activity Name'),
-                  ),
-                  actions: [
-                    TextButton(
-                      onPressed: () {
-                        Navigator.pop(context);
-                      },
-                      child: const Text('Cancel'),
-                    ),
-                    TextButton(
-                      onPressed: () {
-                        final newActivityName = controller.text.trim();
-                        if (newActivityName.isNotEmpty) {
-                          final isDuplicate = _dailyActivities.any((activity) => activity.name.toLowerCase() == newActivityName.toLowerCase());
-                          if (!isDuplicate) {
-                            setState(() {
-                              final newActivity = Activity(
-                                id: _uuid.v4(),
-                                name: newActivityName,
-                                emoji: '📝', // Default emoji
-                              );
-                              _dailyActivities.add(newActivity);
-                              _firestoreService.addDailyActivity(widget.user.uid, newActivity);
-                            });
-                          }
-                        }
-                        Navigator.pop(context);
-                      },
-                      child: const Text('Add'),
-                    ),
-                  ],
-                );
+                return _AddActivityDialog(dailyActivities: _dailyActivities);
               },
             );
+
+            if (newActivityName != null && newActivityName.isNotEmpty) {
+              _addActivity(newActivityName);
+            }
           },
           child: const Icon(Icons.add),
         ),
       ),
+    );
+  }
+}
+
+class _AddActivityDialog extends StatefulWidget {
+  final List<Activity> dailyActivities;
+
+  const _AddActivityDialog({required this.dailyActivities});
+
+  @override
+  State<_AddActivityDialog> createState() => _AddActivityDialogState();
+}
+
+class _AddActivityDialogState extends State<_AddActivityDialog> {
+  final TextEditingController _controller = TextEditingController();
+  String? _errorMessage;
+
+  void _submit() {
+    final newActivityName = _controller.text.trim();
+    if (newActivityName.isEmpty) {
+      setState(() {
+        _errorMessage = 'Activity name cannot be empty.';
+      });
+      return;
+    }
+
+    final isDuplicate = widget.dailyActivities.any((activity) => activity.name.toLowerCase() == newActivityName.toLowerCase());
+
+    if (isDuplicate) {
+      setState(() {
+        _errorMessage = 'This activity already exists.';
+      });
+    } else {
+      Navigator.pop(context, newActivityName);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      title: const Text('Add Activity'),
+      content: TextField(
+        controller: _controller,
+        autofocus: true,
+        decoration: InputDecoration(
+          hintText: 'Activity Name',
+          errorText: _errorMessage,
+        ),
+        onSubmitted: (_) => _submit(),
+      ),
+      actions: [
+        TextButton(
+          onPressed: () {
+            Navigator.pop(context);
+          },
+          child: const Text('Cancel'),
+        ),
+        TextButton(
+          onPressed: _submit,
+          child: const Text('Add'),
+        ),
+      ],
     );
   }
 }
