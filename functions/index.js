@@ -25,7 +25,7 @@ exports.generateAffirmation = onCall(async (request) => {
   }
 
   try {
-    const model = genAI.getGenerativeModel({model: "gemini-1.5-flash"});
+    const model = genAI.getGenerativeModel({model: "gemini-2.5-flash"});
     const result = await model.generateContent(prompt);
     const affirmation = result.response.text();
     logger.info("Affirmation generated successfully",
@@ -58,7 +58,7 @@ exports.generateEncouragement = onCall(async (request) => {
   }
 
   try {
-    const model = genAI.getGenerativeModel({model: "gemini-1.5-flash"});
+    const model = genAI.getGenerativeModel({model: "gemini-2.5-flash"});
     const prompt = "Generate a single, short, encouraging sentence for " +
       `someone who completed this activity: ${completedActivity}.`;
     const result = await model.generateContent(prompt);
@@ -93,7 +93,7 @@ exports.generateNewAffirmation = onCall(async (request) => {
   }
 
   try {
-    const model = genAI.getGenerativeModel({model: "gemini-1.5-flash"});
+    const model = genAI.getGenerativeModel({model: "gemini-2.5-flash"});
     const prompt = "Generate a new, different affirmation, " +
       "between 8 and 14 words long. " +
       `The user disliked this one: "${dislikedAffirmation}".`;
