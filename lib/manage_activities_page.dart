@@ -77,16 +77,20 @@ class _ManageActivitiesPageState extends State<ManageActivitiesPage> {
                     ),
                     TextButton(
                       onPressed: () {
-                        if (controller.text.isNotEmpty) {
-                          setState(() {
-                            final newActivity = Activity(
-                              id: _uuid.v4(),
-                              name: controller.text,
-                              emoji: '📝', // Default emoji
-                            );
-                            _dailyActivities.add(newActivity);
-                            _firestoreService.addDailyActivity(widget.user.uid, newActivity);
-                          });
+                        final newActivityName = controller.text.trim();
+                        if (newActivityName.isNotEmpty) {
+                          final isDuplicate = _dailyActivities.any((activity) => activity.name.toLowerCase() == newActivityName.toLowerCase());
+                          if (!isDuplicate) {
+                            setState(() {
+                              final newActivity = Activity(
+                                id: _uuid.v4(),
+                                name: newActivityName,
+                                emoji: '📝', // Default emoji
+                              );
+                              _dailyActivities.add(newActivity);
+                              _firestoreService.addDailyActivity(widget.user.uid, newActivity);
+                            });
+                          }
                         }
                         Navigator.pop(context);
                       },
