@@ -68,3 +68,6 @@ update_android_icon.sh # Script for updating icons
 # Firebase build artifacts
 .firebase/hosting.*.cache
 .firebase/reathm-cli/hosting/
+
+# Windows build files
+/windows/flutter/generated_plugins.cmake
