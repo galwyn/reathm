@@ -69,7 +69,7 @@ class _LoginPageState extends State<LoginPage> {
       _showError(e.message);
     } catch (e) {
       print('Exception in _signInWithGoogle: $e');
-      _showError('An unknown error occurred.');
+      _showError(e.toString());
     } finally {
       if (mounted) {
         setState(() {
