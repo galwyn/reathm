@@ -24,6 +24,7 @@ This phase will ensure that tests are automatically run for every code change, p
     - Run `flutter pub get`.
     - Run `flutter analyze` to check for code quality issues.
     - Run `flutter test` to run the unit and widget tests.
+    - Run `flutter build apk --debug` to ensure the Android application compiles successfully.
 
 ## Phase 3: Staging Environment & Cloud Testing
 
