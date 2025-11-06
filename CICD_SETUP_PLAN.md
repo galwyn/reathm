@@ -50,19 +50,23 @@ This document outlines the plan to establish a professional Continuous Integrati
 
 ## Phase 3: Staging Environment & Cloud Testing
 
-**Goal:** Automatically deploy feature branches to a temporary URL for review and real-world testing before merging.
+**Goal:** Automatically deploy feature branches to a temporary URL for review and run integration tests on a realistic cloud-based Android device.
 
 - [ ] **3.1: Create Workflow File**
     - **Work Items:** I will create a new GitHub Actions workflow file at `.github/workflows/deploy_preview.yml`.
-    - **Purpose:** This file will contain the instructions for deploying a temporary preview of the app.
+    - **Purpose:** This file will contain the instructions for deploying a temporary preview of the app and running cloud tests.
 
 - [ ] **3.2: Define Workflow Trigger**
     - **Work Items:** I will add configuration to the `deploy_preview.yml` file.
     - **Purpose:** This will configure the workflow to trigger automatically whenever a `pull_request` is opened or updated against the `main` branch.
 
-- [ ] **3.3: Define Workflow Steps**
-    - **Work Items:** I will add the specific job steps to the `deploy_preview.yml` file.
-    - **Purpose:** These steps will run the tests, and if they pass, will deploy the code from the pull request to a unique, temporary preview URL and post that URL as a comment on the pull request for easy access.
+- [ ] **3.3: Define Deployment Steps**
+    - **Work Items:** I will add job steps to the `deploy_preview.yml` file for deployment.
+    - **Purpose:** These steps will run the test suite, and if they pass, will deploy the web app to a unique, temporary preview URL and post that URL as a comment on the pull request.
+
+- [ ] **3.4: Define Cloud Testing Steps (Cuttlefish)**
+    - **Work Items:** I will add a second job to the `deploy_preview.yml` file for running tests on Cuttlefish.
+    - **Purpose:** These steps will provision a Google Cloud VM, launch a Cuttlefish virtual Android device, build and install the debug APK, run integration/end-to-end tests against it, and report the results back to the pull request. This provides high-fidelity testing on a realistic device, as you requested.
 
 ---
 
