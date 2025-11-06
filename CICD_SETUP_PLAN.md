@@ -89,3 +89,13 @@ This document outlines the plan to establish a professional Continuous Integrati
 - [ ] **4.4: Secure Secrets**
     - **Work Items:** This step is a manual configuration for you. I will guide you on where to do it.
     - **Purpose:** To allow the automated workflow to authenticate with Firebase, your `FIREBASE_TOKEN` must be securely stored in the GitHub repository's "Secrets" configuration.
+
+---
+
+## Phase 5: Natural Language Testing Framework (Future)
+
+**Goal:** Create a custom testing framework that allows tests to be driven by plain English commands, interpreted by Gemini.
+
+- [ ] **5.1: Design Command Structure:** Define a clear, consistent structure for natural language commands (e.g., "tap the 'Add' button", "verify 'Hello' is visible").
+- [ ] **5.2: Implement Test Runner:** Create a Dart test helper function that takes a natural language string, parses it, and maps it to the corresponding `flutter_test` widget tester action (e.g., `tester.tap`, `expect`).
+- [ ] **5.3: Write Example Tests:** Convert an existing widget test to use the new natural language runner to prove the concept.
