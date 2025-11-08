@@ -45,3 +45,4 @@ package-lock.json
 # Session / Log files
 logcat_capture.txt
 gemini_cli_session_log.md
+CICD_SETUP_PLAN.md
