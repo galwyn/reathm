@@ -15,10 +15,15 @@ void main() async {
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );
-  if (kDebugMode) {
-    await wipeAndSeedDatabase('nXT0qdPYkbYBPyaVUByzKo7MCRt2');
-  }
-  // await NotificationService().init();
+        if (kDebugMode) {
+          // Connect to Firebase Emulators
+          const String emulatorHost = 'localhost'; // Or 10.0.2.2 for Android emulator
+          FirebaseFirestore.instance.useFirestoreEmulator(emulatorHost, 8080);
+          FirebaseAuth.instance.useAuthEmulator(emulatorHost, 9099);
+          FirebaseFunctions.instance.useFunctionsEmulator(emulatorHost, 5001);
+  
+          await wipeAndSeedDatabase('nXT0qdPYkbYBPyaVUByzKo7MCRt2');
+        }  // await NotificationService().init();
   runApp(ReathmApp());
 }
 
