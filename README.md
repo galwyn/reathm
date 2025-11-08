@@ -40,6 +40,21 @@ Reathm is a mobile application designed to help you start your day with a positi
     flutter run
     ```
 
+### Local Development with Emulators
+
+For local development and testing without affecting your live Firebase project, you can use the Firebase Emulator Suite.
+
+1.  **Start Emulators:**
+    ```sh
+    ./scripts/run_emulators.sh
+    ```
+2.  **Run App in Debug Mode:** Your Flutter app is configured to automatically connect to the local emulators when run in debug mode.
+    ```sh
+    flutter run
+    ```
+    (Ensure the emulators are running before launching your app.)
+    ```
+
 ## Tech Stack
 
 *   **Frontend:** [Flutter](https://flutter.dev/)
