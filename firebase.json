@@ -60,8 +60,8 @@
           "port": 5000
         },
         "ui": {
-
-
-    "singleProjectMode": true
-  }
+          "enabled": true
+        },
+        "singleProjectMode": true
+    }
 }
