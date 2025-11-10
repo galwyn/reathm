@@ -1,16 +1,16 @@
-# General
+# General ignores
 .DS_Store
 *.log
 *.pyc
 *.swp
 
-# IDEs
+# IDE specific files
 .idea/
 .vscode/
 .atom/
 .history/
 
-# Flutter/Dart
+# Flutter/Dart specific ignores
 .dart_tool/
 .flutter-plugins
 .flutter-plugins-dependencies
@@ -19,9 +19,8 @@
 /build/
 app.*.symbols
 app.*.map.json
-pubspec.lock
 
-# Platform Specific
+# Platform specific generated files
 /ios/Flutter/.last_build_id
 /android/app/debug/
 /android/app/profile/
@@ -29,19 +28,19 @@ pubspec.lock
 /android/.gradle/
 /windows/flutter/generated_plugins.cmake
 
-# Firebase
+# Firebase specific generated files and caches
 .firebase/
 lib/firebase_options.dart
 
-# Node
+# Node.js specific ignores (for functions/ directory)
 /node_modules/
 package-lock.json
 
-# Sensitive / Secret files
+# Sensitive files (should NEVER be committed)
 /android/key.properties
 /android/app/google-services.json
 *.jks
 
-# Session / Log files
+# Generated log/session files
 logcat_capture.txt
 gemini_cli_session_log.md
