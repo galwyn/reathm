@@ -9,4 +9,41 @@ on:
       - 'fix/**'
 
 jobs:
-  # Jobs will be defined in subsequent steps
+  verify_build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: 'stable'
+
+      - name: Install dependencies
+        run: flutter pub get
+
+      - name: Analyze code
+        run: flutter analyze
+
+      - name: Run tests
+        run: flutter test
+
+      - name: Build Debug APK
+        run: flutter build apk --debug
+
+      - name: Build Web App
+        run: flutter build web --release
+
+      # Optional: Add steps to upload artifacts if needed
+      # - name: Upload APK artifact
+      #   uses: actions/upload-artifact@v3
+      #   with:
+      #     name: app-debug-apk
+      #     path: build/app/outputs/flutter-apk/app-debug.apk
+      # - name: Upload Web artifact
+      #   uses: actions/upload-artifact@v3
+      #   with:
+      #     name: web-app
+      #     path: build/web
