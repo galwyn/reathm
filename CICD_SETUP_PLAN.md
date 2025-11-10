@@ -8,15 +8,15 @@ This document outlines the plan to establish a professional Continuous Integrati
 
 **Goal:** Allow for rapid, offline testing of the app and cloud functions.
 
-- [ ] **1.1: Initialize Emulators**
+- [x] **1.1: Initialize Emulators**
     - **Work Items:** I will run the `firebase init emulators` command and guide you through the interactive setup prompts.
     - **Purpose:** This creates the configuration file (`firebase.json`) and downloads the emulator software, which is the first step to being able to run Firebase services locally.
 
-- [ ] **1.2: Configure Emulators**
+- [x] **1.2: Configure Emulators**
     - **Work Items:** I will modify `firebase.json` to specify which emulators to use (Auth, Functions, Firestore, Hosting).
     - **Purpose:** This tells the Firebase CLI which services we want to simulate locally.
 
-- [ ] **1.3: Configure App for Emulators**
+- [x] **1.3: Configure App for Emulators**
     - **Work Items:** I will modify the application's source code (`main.dart`) to detect when it's in debug mode and connect to the local emulators instead of the live Firebase project.
     - **Purpose:** This allows the Flutter app to communicate with the local emulators on your machine for testing, instead of touching your live production data.
 
@@ -54,7 +54,7 @@ This document outlines the plan to establish a professional Continuous Integrati
 
 - [ ] **3.1: Create Workflow File**
     - **Work Items:** I will create a new GitHub Actions workflow file at `.github/workflows/deploy_preview.yml`.
-    - **Purpose:** This file will contain the instructions for deploying a temporary preview of the app and running cloud tests.
+    - **Purpose:** This file will contain the instructions for deploying a temporary preview of the app.
 
 - [ ] **3.2: Define Workflow Trigger**
     - **Work Items:** I will add configuration to the `deploy_preview.yml` file.
