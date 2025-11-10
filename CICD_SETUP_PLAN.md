@@ -20,11 +20,11 @@ This document outlines the plan to establish a professional Continuous Integrati
     - **Work Items:** I will modify the application's source code (`main.dart`) to detect when it's in debug mode and connect to the local emulators instead of the live Firebase project.
     - **Purpose:** This allows the Flutter app to communicate with the local emulators on your machine for testing, instead of touching your live production data.
 
-- [ ] **1.4: Create Emulator Script**
+- [x] **1.4: Create Emulator Script**
     - **Work Items:** I will create a new script at `scripts/run_emulators.sh`.
     - **Purpose:** This provides a simple, one-command way to start the entire suite of emulators.
 
-- [ ] **1.5: Document Emulator Usage**
+- [x] **1.5: Document Emulator Usage**
     - **Work Items:** I will add a new section to your `README.md` file.
     - **Purpose:** This documents how any developer on the project can use the new emulator script for easy local development.
 
