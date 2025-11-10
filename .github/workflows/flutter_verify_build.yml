@@ -1,0 +1,12 @@
+name: Flutter Verify Build
+
+on:
+  push:
+    branches:
+      - main
+      - develop
+      - 'feature/**'
+      - 'fix/**'
+
+jobs:
+  # Jobs will be defined in subsequent steps
