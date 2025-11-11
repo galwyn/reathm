@@ -6,4 +6,43 @@ on:
       - main
 
 jobs:
-  # Jobs will be defined in subsequent steps
+  deploy_preview:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: 'stable'
+
+      - name: Install dependencies
+        run: flutter pub get
+
+      - name: Run tests
+        run: flutter test
+
+      - name: Build Web App
+        run: flutter build web --release
+
+      - name: Deploy to Firebase Preview Channel
+        uses: FirebaseExtended/action-hosting-deploy@v0
+        with:
+          repoToken: '${{ secrets.GITHUB_TOKEN }}'
+          firebaseServiceAccount: '${{ secrets.FIREBASE_SERVICE_ACCOUNT_REATHM_CLI }}'
+          projectId: 'reathm-cli'
+          channelId: 'pr-${{ github.event.pull_request.number }}'
+          target: 'default' # Assuming your hosting target is 'default'
+
+      - name: Post Preview URL to PR
+        uses: actions/github-script@v6
+        with:
+          script: |
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: '🚀 Your preview is live at: ${{ steps.deploy_to_preview.outputs.url }}'
+            })
