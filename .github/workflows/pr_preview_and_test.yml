@@ -1,0 +1,9 @@
+name: PR Preview and Test
+
+on:
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  # Jobs will be defined in subsequent steps
