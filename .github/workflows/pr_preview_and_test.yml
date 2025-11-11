@@ -46,3 +46,41 @@ jobs:
               repo: context.repo.repo,
               body: '🚀 Your preview is live at: ${{ steps.deploy_to_preview.outputs.url }}'
             })
+
+  cuttlefish_test:
+    runs-on: ubuntu-latest
+    needs: deploy_preview # Ensure deployment is done before testing
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: 'stable'
+
+      - name: Install dependencies
+        run: flutter pub get
+
+      - name: Build Debug APK
+        run: flutter build apk --debug
+
+      - name: Setup Cuttlefish
+        # This step would involve more complex setup, e.g.,
+        # - Provisioning a GCP VM
+        # - Installing Cuttlefish on the VM
+        # - Launching the Cuttlefish instance
+        # - Connecting adb to the Cuttlefish instance
+        # For now, we'll use a placeholder.
+        run: echo "Placeholder for Cuttlefish setup"
+
+      - name: Run Integration Tests on Cuttlefish
+        # This step would involve:
+        # - Installing the APK on Cuttlefish
+        # - Running Flutter integration tests (e.g., `flutter test integration_test/app_test.dart`)
+        # For now, we'll use a placeholder.
+        run: echo "Placeholder for running tests on Cuttlefish"
+
+      # Optional: Add steps to upload test results or screenshots
+    
