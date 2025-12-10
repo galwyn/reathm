@@ -12,20 +12,35 @@ import 'main_scaffold.dart';
 import 'notification_service.dart';
 import 'seed_data.dart';
 
+// Toggle this to true if you want to use local emulators.
+const bool useEmulators = false;
+
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );
-        if (kDebugMode) {
-          // Connect to Firebase Emulators
-          const String emulatorHost = 'localhost'; // Or 10.0.2.2 for Android emulator
-          FirebaseFirestore.instance.useFirestoreEmulator(emulatorHost, 8080);
-          FirebaseAuth.instance.useAuthEmulator(emulatorHost, 9099);
-          FirebaseFunctions.instance.useFunctionsEmulator(emulatorHost, 5001);
-  
-          await wipeAndSeedDatabase('nXT0qdPYkbYBPyaVUByzKo7MCRt2');
-        }  // await NotificationService().init();
+
+  if (kDebugMode && useEmulators) {
+    // Connect to Firebase Emulators
+    // For Android emulator, use 10.0.2.2. For iOS/Web, use localhost.
+    final String emulatorHost =
+        defaultTargetPlatform == TargetPlatform.android ? '10.0.2.2' : 'localhost';
+
+    print('Connecting to Firebase Emulators at $emulatorHost');
+
+    try {
+      FirebaseFirestore.instance.useFirestoreEmulator(emulatorHost, 8080);
+      await FirebaseAuth.instance.useAuthEmulator(emulatorHost, 9099);
+      FirebaseFunctions.instance.useFunctionsEmulator(emulatorHost, 5001);
+
+      // Seed data only if explicitly requested or needed, not on every reload.
+      // await wipeAndSeedDatabase('nXT0qdPYkbYBPyaVUByzKo7MCRt2');
+    } catch (e) {
+      print('Error connecting to emulators: $e');
+    }
+  }
+  // await NotificationService().init();
   runApp(ReathmApp());
 }
 

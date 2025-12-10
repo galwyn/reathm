@@ -6,6 +6,7 @@ import 'notification_service.dart';
 import 'manage_activities_page.dart';
 import 'package:timezone/data/latest.dart' as tzdata;
 import 'package:reathm/models/activity.dart';
+import 'package:reathm/models/affirmation_theme.dart';
 import 'firestore_service.dart';
 
 class HomePage extends StatefulWidget {
@@ -30,6 +31,7 @@ class _HomePageState extends State<HomePage> {
   late final CloudFunctionService _cloudFunctionService;
   late final FirestoreService _firestoreService;
   String _affirmation = 'Loading affirmation...';
+  AffirmationTheme _currentTheme = AffirmationTheme.general;
   List<Activity> _dailyActivities = [];
   List<String> _todaysAccomplishments = [];
 
@@ -105,7 +107,10 @@ class _HomePageState extends State<HomePage> {
 
   Future<void> _generateNewAffirmationFromAI() async {
     try {
-      final newAffirmation = await _cloudFunctionService.generateNewAffirmation(_affirmation);
+      final newAffirmation = await _cloudFunctionService.generateNewAffirmation(
+        _affirmation,
+        theme: _currentTheme.id,
+      );
       setState(() {
         _affirmation = newAffirmation;
       });
@@ -119,6 +124,26 @@ class _HomePageState extends State<HomePage> {
         _affirmation = 'Error: Could not generate new affirmation. Please try again.';
       });
       print('Error in _generateNewAffirmationFromAI: $e');
+    }
+  }
+
+  Future<void> _changeAffirmationTheme(AffirmationTheme? newTheme) async {
+    if (newTheme == null || newTheme == _currentTheme) return;
+
+    setState(() {
+      _currentTheme = newTheme;
+      _affirmation = 'Loading new theme...';
+    });
+
+    try {
+      final affirmation = await _cloudFunctionService.generateAffirmation(theme: newTheme.id);
+      setState(() {
+        _affirmation = affirmation;
+      });
+    } catch (e) {
+      setState(() {
+        _affirmation = 'Error loading new theme.';
+      });
     }
   }
 
@@ -180,6 +205,25 @@ class _HomePageState extends State<HomePage> {
       ),
       child: Column(
         children: [
+          Align(
+            alignment: Alignment.centerRight,
+            child: DropdownButtonHideUnderline(
+              child: DropdownButton<AffirmationTheme>(
+                value: _currentTheme,
+                isDense: true,
+                items: AffirmationTheme.values.map((theme) {
+                  return DropdownMenuItem(
+                    value: theme,
+                    child: Text(
+                      theme.displayName,
+                      style: const TextStyle(fontSize: 12, color: Colors.grey),
+                    ),
+                  );
+                }).toList(),
+                onChanged: _changeAffirmationTheme,
+              ),
+            ),
+          ),
           Text(
             _affirmation,
             style: Theme.of(context).textTheme.headlineSmall?.copyWith(
@@ -213,11 +257,7 @@ class _HomePageState extends State<HomePage> {
                 color: Colors.red,
                 onPressed: () {
                   _saveAffirmationFeedback(false);
-                  _cloudFunctionService.generateNewAffirmation(_affirmation).then((newAffirmation) {
-                    setState(() {
-                      _affirmation = newAffirmation;
-                    });
-                  });
+                  _generateNewAffirmationFromAI();
                 },
               ),
             ],

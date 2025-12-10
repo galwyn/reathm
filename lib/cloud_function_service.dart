@@ -3,10 +3,10 @@ import 'package:cloud_functions/cloud_functions.dart';
 class CloudFunctionService {
   final FirebaseFunctions _functions = FirebaseFunctions.instance;
 
-  Future<String> generateAffirmation(String prompt) async {
+  Future<String> generateAffirmation({String theme = 'general'}) async {
     try {
       final HttpsCallable callable = _functions.httpsCallable('generateAffirmation');
-      final HttpsCallableResult result = await callable.call<Map<String, dynamic>>({'prompt': prompt});
+      final HttpsCallableResult result = await callable.call<Map<String, dynamic>>({'theme': theme});
       return result.data['affirmation'];
     } catch (e) {
       print('Error calling generateAffirmation: $e');
@@ -25,10 +25,13 @@ class CloudFunctionService {
     }
   }
 
-  Future<String> generateNewAffirmation(String dislikedAffirmation) async {
+  Future<String> generateNewAffirmation(String dislikedAffirmation, {String theme = 'general'}) async {
     try {
       final HttpsCallable callable = _functions.httpsCallable('generateNewAffirmation');
-      final HttpsCallableResult result = await callable.call<Map<String, dynamic>>({'dislikedAffirmation': dislikedAffirmation});
+      final HttpsCallableResult result = await callable.call<Map<String, dynamic>>({
+        'dislikedAffirmation': dislikedAffirmation,
+        'theme': theme,
+      });
       return result.data['affirmation'];
     } catch (e) {
       print('Error calling generateNewAffirmation: $e');
