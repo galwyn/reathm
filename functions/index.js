@@ -6,37 +6,79 @@ const {GoogleGenerativeAI} = require("@google/generative-ai");
 
 admin.initializeApp();
 
-
+/**
+ * Generates an affirmation based on a theme/persona.
+ * First checks Firestore for a cached affirmation of the same theme
+ * that hasn't been used recently (implied simple cache).
+ * If none, calls Gemini.
+ */
 exports.generateAffirmation = onCall(async (request) => {
-  logger.info("generateAffirmation request received",
-      {structuredData: true});
+  logger.info("generateAffirmation request received", {structuredData: true});
 
-  // Get the Gemini API key from the environment variables
-  const genAI = new GoogleGenerativeAI(process.env.GEMINI_KEY);
-
-  const prompt = request.data.prompt;
-
-  if (!prompt) {
-    logger.error("No prompt provided");
-    throw new functions.https.HttpsError(
-        "invalid-argument",
-        "No prompt provided",
-    );
-  }
+  const theme = request.data.theme || "general";
+  const collectionRef = admin.firestore().collection("affirmations_cache");
 
   try {
+    // 1. Check cache: Get a random affirmation for this theme
+    // For simplicity, we get one where 'usedCount' is low or just random.
+    // Real production might need better randomization logic.
+    const snapshot = await collectionRef
+        .where("theme", "==", theme)
+        .limit(10)
+        .get();
+
+    if (!snapshot.empty) {
+      // Pick a random one from the batch
+      const docs = snapshot.docs;
+      const randomDoc = docs[Math.floor(Math.random() * docs.length)];
+      logger.info("Serving affirmation from cache", {structuredData: true});
+      return {affirmation: randomDoc.data().text};
+    }
+
+    // 2. If Cache Miss, Call Gemini
+    const genAI = new GoogleGenerativeAI(process.env.GEMINI_KEY);
     const model = genAI.getGenerativeModel({model: "gemini-2.5-flash"});
+
+    let prompt = "";
+    switch (theme) {
+      case "stoic":
+        prompt = "Generate a short, powerful Stoic affirmation about " +
+          "resilience, control, or virtue. Max 15 words.";
+        break;
+      case "tough_love":
+        prompt = "Generate a short, direct 'tough love' affirmation " +
+          "challenging the user to take action and stop making excuses. " +
+          "Max 15 words.";
+        break;
+      case "gentle":
+        prompt = "Generate a soft, comforting affirmation about " +
+          "self-compassion and patience. Max 15 words.";
+        break;
+      case "spiritual":
+        prompt = "Generate a deep, spiritual affirmation about " +
+          "connection to the universe or inner peace. Max 15 words.";
+        break;
+      default:
+        prompt = "Generate a positive, inspiring affirmation. Max 15 words.";
+    }
+
     const result = await model.generateContent(prompt);
-    const affirmation = result.response.text();
-    logger.info("Affirmation generated successfully",
+    const affirmationText = result.response.text().trim();
+
+    // 3. Store in Cache for future use
+    await collectionRef.add({
+      text: affirmationText,
+      theme: theme,
+      createdAt: admin.firestore.FieldValue.serverTimestamp(),
+    });
+
+    logger.info("Affirmation generated via AI and cached",
         {structuredData: true});
-    return {affirmation: affirmation};
+    return {affirmation: affirmationText};
   } catch (error) {
     logger.error("Error generating affirmation:", error);
-    throw new functions.https.HttpsError(
-        "internal",
-        "Error generating affirmation",
-    );
+    // Fallback if AI fails
+    return {affirmation: "You are stronger than you know."};
   }
 });
 
@@ -44,9 +86,7 @@ exports.generateEncouragement = onCall(async (request) => {
   logger.info("generateEncouragement request received",
       {structuredData: true});
 
-  // Get the Gemini API key from the environment variables
   const genAI = new GoogleGenerativeAI(process.env.GEMINI_KEY);
-
   const completedActivity = request.data.completedActivity;
 
   if (!completedActivity) {
@@ -76,13 +116,14 @@ exports.generateEncouragement = onCall(async (request) => {
 });
 
 exports.generateNewAffirmation = onCall(async (request) => {
+  // Same logic as generateAffirmation but forces a new generation
+  // (ignoring cache) because the user specifically disliked the previous one.
   logger.info("generateNewAffirmation request received",
       {structuredData: true});
 
-  // Get the Gemini API key from the environment variables
   const genAI = new GoogleGenerativeAI(process.env.GEMINI_KEY);
-
   const dislikedAffirmation = request.data.dislikedAffirmation;
+  const theme = request.data.theme || "general";
 
   if (!dislikedAffirmation) {
     logger.error("No dislikedAffirmation provided");
@@ -94,14 +135,22 @@ exports.generateNewAffirmation = onCall(async (request) => {
 
   try {
     const model = genAI.getGenerativeModel({model: "gemini-2.5-flash"});
-    const prompt = "Generate a new, different affirmation, " +
+    const prompt = `Generate a new, different affirmation (Theme: ${theme}), ` +
       "between 8 and 14 words long. " +
       `The user disliked this one: "${dislikedAffirmation}".`;
     const result = await model.generateContent(prompt);
-    const affirmation = result.response.text();
+    const affirmationText = result.response.text().trim();
+
+    // Cache this new one too
+    await admin.firestore().collection("affirmations_cache").add({
+      text: affirmationText,
+      theme: theme,
+      createdAt: admin.firestore.FieldValue.serverTimestamp(),
+    });
+
     logger.info("New affirmation generated successfully",
         {structuredData: true});
-    return {affirmation: affirmation};
+    return {affirmation: affirmationText};
   } catch (error) {
     logger.error("Error generating new affirmation:", error);
     throw new functions.https.HttpsError(
